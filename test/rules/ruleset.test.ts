@@ -138,6 +138,10 @@ describe("host matching regression", () => {
     // multi-host hosts() rules
     ["topshare.in", "/", "form-tp-pattern"],
     ["djssmusic.com", "/", "form-tp-pattern"],
+    ["themezon.net", "/", "form-tp-snp2-pattern"],
+    ["otowp.com", "/", "form-tp-snp2-pattern"],
+    ["vi-music.app", "/", "form-tp-snp2-pattern"],
+    ["bonloan.xyz", "/", "form-tp-snp2-pattern"],
     ["vahansamachar.com", "/", "form-rtg-pattern"],
     ["carjankaari.com", "/", "form-rtg-pattern"],
     ["askpaccosi.com", "/", "form-dsb-captcha"],

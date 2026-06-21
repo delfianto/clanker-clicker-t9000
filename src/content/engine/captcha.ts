@@ -62,6 +62,10 @@ function isCaptchaSolved(): boolean {
     if (r && r.length > 0) return true;
   }
 
+  // textarea is populated for both v2-checkbox and v2-invisible reCAPTCHA
+  const gTextarea = qs("textarea[name='g-recaptcha-response']") as HTMLTextAreaElement | null;
+  if (gTextarea && gTextarea.value.length > 0) return true;
+
   if (qs("iframe[title='reCAPTCHA']")) {
     const r = w.grecaptcha?.getResponse();
     if (r && r.length > 0) return true;

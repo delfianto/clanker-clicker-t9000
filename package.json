@@ -13,7 +13,8 @@
     "lint": "vp lint src/",
     "fmt": "vp fmt src/",
     "test": "bun test",
-    "test:coverage": "bun test --coverage"
+    "test:coverage": "bun test --coverage",
+    "debug": "bun run scripts/debug-bypass.ts"
   },
   "dependencies": {
     "webextension-polyfill": "^0.12.0"
@@ -23,6 +24,7 @@
     "@types/chrome": "^0.0.268",
     "@types/webextension-polyfill": "^0.12.0",
     "happy-dom": "^20.10.6",
+    "playwright": "^1.61.0",
     "typescript": "rc",
     "vite-plugin-web-extension": "latest",
     "vite-plus": "latest"

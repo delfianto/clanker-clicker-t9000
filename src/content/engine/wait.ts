@@ -1,6 +1,6 @@
 import { qs, isVisible } from "./dom";
 
-const DEFAULT_TIMEOUT_MS = 15_000;
+const DEFAULT_TIMEOUT_MS = 30_000;
 const VISIBILITY_POLL_MS = 500;
 
 export class TimeoutError extends Error {

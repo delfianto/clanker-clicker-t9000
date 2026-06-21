@@ -174,11 +174,47 @@ export const shortlinkRules: Rule[] = [
       "sayphotobooth.com",
       "sharedp.com",
       "superheromaniac.com",
-      "visastepguide.com",
       "topshare.in",
+      "visastepguide.com",
     ),
     "tp",
   ),
+  {
+    // Sites using WP SafeLink's tp form + #tp-snp2 button.
+    // Two-phase pattern on some hosts (e.g. themezon.net):
+    //   Phase 1: form[name='tp'] exists → submit it directly (bypasses countdown UI)
+    //   Phase 2: #nextPage variant has no form; a hidden #tp-snp2 appears after a
+    //            JS countdown (timer boost crushes it to ~50ms) → click when visible
+    id: "form-tp-snp2-pattern",
+    match: hosts(
+      "ajtaknews.com",
+      "atozmaster.com",
+      "bloggingwow.store",
+      "bonloan.xyz",
+      "carrnissan.com",
+      "hellopuja.com",
+      "otowp.com",
+      "rokni.xyz",
+      "tackledsoul.com",
+      "themezon.net",
+      "vi-music.app",
+    ),
+    runAt: "loaded",
+    actions: [
+      {
+        type: "run",
+        run: (ctx) => {
+          const form = ctx.qs<HTMLFormElement>("form[name='tp']");
+          if (form) form.submit();
+        },
+      },
+      {
+        type: "wait-visibility",
+        selector: "#tp-snp2",
+        steps: [{ type: "click", selector: "#tp-snp2" }],
+      },
+    ],
+  },
   {
     id: "form-dsb-captcha",
     match: hosts("askpaccosi.com", "cryptomonitor.com"),
