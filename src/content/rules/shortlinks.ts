@@ -180,7 +180,7 @@ export const shortlinkRules: Rule[] = [
     runAt: 'loaded',
     actions: [{
       type: 'wait-element', selector: 'a#botonGo',
-      then: [{ type: 'redirect-from-href', selector: 'a#botonGo' }],
+      steps: [{ type: 'redirect-from-href', selector: 'a#botonGo' }],
     }],
   },
   {
@@ -189,7 +189,7 @@ export const shortlinkRules: Rule[] = [
     runAt: 'loaded',
     actions: [{
       type: 'wait-element', selector: 'div.col-md-12 a',
-      then: [{ type: 'redirect-from-href', selector: 'div.col-md-12 a' }],
+      steps: [{ type: 'redirect-from-href', selector: 'div.col-md-12 a' }],
     }],
   },
   {
@@ -198,7 +198,7 @@ export const shortlinkRules: Rule[] = [
     runAt: 'loaded',
     actions: [{
       type: 'wait-element', selector: '#redirect-button',
-      then: [{ type: 'redirect-from-href', selector: '#redirect-button' }],
+      steps: [{ type: 'redirect-from-href', selector: '#redirect-button' }],
     }],
   },
   {
@@ -207,7 +207,7 @@ export const shortlinkRules: Rule[] = [
     runAt: 'loaded',
     actions: [{
       type: 'wait-element', selector: 'a#btn-main.btn.btn-warning.btn-lg',
-      then: [{ type: 'redirect-from-href', selector: 'a#btn-main.btn.btn-warning.btn-lg' }],
+      steps: [{ type: 'redirect-from-href', selector: 'a#btn-main.btn.btn-warning.btn-lg' }],
     }],
   },
   {
@@ -216,7 +216,7 @@ export const shortlinkRules: Rule[] = [
     runAt: 'loaded',
     actions: [{
       type: 'wait-element', selector: 'a.btn.btn-success.btn-lg.get-link.enabled',
-      then: [{ type: 'redirect-from-href', selector: 'a.btn.btn-success.btn-lg.get-link.enabled' }],
+      steps: [{ type: 'redirect-from-href', selector: 'a.btn.btn-success.btn-lg.get-link.enabled' }],
     }],
   },
   {
@@ -225,7 +225,7 @@ export const shortlinkRules: Rule[] = [
     runAt: 'loaded',
     actions: [{
       type: 'wait-element', selector: 'a.btn.btn-secondary.btn-block.redirect',
-      then: [{ type: 'redirect-from-href', selector: 'a.btn.btn-secondary.btn-block.redirect' }],
+      steps: [{ type: 'redirect-from-href', selector: 'a.btn.btn-secondary.btn-block.redirect' }],
     }],
   },
 
@@ -258,7 +258,7 @@ export const shortlinkRules: Rule[] = [
     match: '(askpaccosi|cryptomonitor)\\.com',
     runAt: 'loaded',
     actions: [
-      { type: 'wait-captcha', then: [{ type: 'submit', selector: "form[name='dsb']" }] },
+      { type: 'wait-captcha', steps: [{ type: 'submit', selector: "form[name='dsb']" }] },
     ],
   },
 
@@ -268,22 +268,22 @@ export const shortlinkRules: Rule[] = [
     id: 'playpaste-captcha',
     match: '^playpaste\\.com$',
     runAt: 'loaded',
-    actions: [{ type: 'wait-captcha', then: [{ type: 'click', selector: 'button.btn' }] }],
+    actions: [{ type: 'wait-captcha', steps: [{ type: 'click', selector: 'button.btn' }] }],
   },
   {
     id: 'tii-la-family',
     match: '^(tii|oei|iir|tvi|oii|tpi|lnbz)\\.(la|li)$',
     runAt: 'loaded',
-    actions: [{ type: 'wait-captcha', then: [{ type: 'click', selector: '#continue' }] }],
+    actions: [{ type: 'wait-captcha', steps: [{ type: 'click', selector: '#continue' }] }],
   },
   {
     id: 'fc-lc-family',
     match: '^(fc-lc|thotpacks)\\.xyz|^fc\\.lc$',
     runAt: 'loaded',
     actions: [
-      { type: 'wait-captcha', then: [{ type: 'submit', selector: '#link-view' }] },
+      { type: 'wait-captcha', steps: [{ type: 'submit', selector: '#link-view' }] },
       { type: 'click', selector: '#invisibleCaptchaShortlink', delay: 3000 },
-      { type: 'wait-captcha', then: [{ type: 'click', selector: '#submitBtn' }] },
+      { type: 'wait-captcha', steps: [{ type: 'click', selector: '#submitBtn' }] },
     ],
   },
   {
@@ -307,7 +307,7 @@ export const shortlinkRules: Rule[] = [
     runAt: 'loaded',
     actions: [
       { type: 'submit', selector: '#form-continue', delay: 2000 },
-      { type: 'wait-captcha', then: [{ type: 'submit', selector: '#link-view' }] },
+      { type: 'wait-captcha', steps: [{ type: 'submit', selector: '#link-view' }] },
     ],
   },
 ];

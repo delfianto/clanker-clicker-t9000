@@ -11,8 +11,8 @@ export const downloadRules: Rule[] = [
     requiresFeature: DL,
     actions: [
       { type: 'click', selector: '#fbtn1', delay: 2000 },
-      { type: 'wait-captcha', then: [{ type: 'click', selector: '#downloadbtn' }] },
-      { type: 'wait-element', selector: '#dlink', then: [{ type: 'redirect-from-href', selector: '#dlink' }] },
+      { type: 'wait-captcha', steps: [{ type: 'click', selector: '#downloadbtn' }] },
+      { type: 'wait-element', selector: '#dlink', steps: [{ type: 'redirect-from-href', selector: '#dlink' }] },
     ],
   },
   {
@@ -22,7 +22,7 @@ export const downloadRules: Rule[] = [
     requiresFeature: DL,
     actions: [
       { type: 'click', selector: '#fbtn1', delay: 2000 },
-      { type: 'wait-captcha', then: [{ type: 'click', selector: '#downloadbtn' }] },
+      { type: 'wait-captcha', steps: [{ type: 'click', selector: '#downloadbtn' }] },
     ],
   },
   {
@@ -40,7 +40,7 @@ export const downloadRules: Rule[] = [
     requiresFeature: DL,
     actions: [
       { type: 'click', selector: '#fbtn1', delay: 2000 },
-      { type: 'wait-captcha', then: [{ type: 'click', selector: '#downloadbtn' }] },
+      { type: 'wait-captcha', steps: [{ type: 'click', selector: '#downloadbtn' }] },
     ],
   },
   {
@@ -51,7 +51,7 @@ export const downloadRules: Rule[] = [
     actions: [{
       type: 'wait-element',
       selector: '#filemanager',
-      then: [{ type: 'click', selector: 'button.item_download', delay: 2000 }],
+      steps: [{ type: 'click', selector: 'button.item_download', delay: 2000 }],
     }],
   },
   {
@@ -76,8 +76,8 @@ export const downloadRules: Rule[] = [
     requiresFeature: DL,
     actions: [
       { type: 'custom', handler: 'turbobit-nopay' },
-      { type: 'wait-captcha', then: [{ type: 'click', selector: '#submit' }] },
-      { type: 'wait-element', selector: '#free-download-file-link', then: [{ type: 'redirect-from-href', selector: '#free-download-file-link' }] },
+      { type: 'wait-captcha', steps: [{ type: 'click', selector: '#submit' }] },
+      { type: 'wait-element', selector: '#free-download-file-link', steps: [{ type: 'redirect-from-href', selector: '#free-download-file-link' }] },
     ],
   },
   {
@@ -87,7 +87,7 @@ export const downloadRules: Rule[] = [
     requiresFeature: DL,
     actions: [
       { type: 'click', selector: '#method_free', delay: 2000 },
-      { type: 'wait-captcha', then: [{ type: 'click', selector: '#downloadbtn' }] },
+      { type: 'wait-captcha', steps: [{ type: 'click', selector: '#downloadbtn' }] },
     ],
   },
   {
@@ -97,8 +97,8 @@ export const downloadRules: Rule[] = [
     requiresFeature: DL,
     actions: [
       { type: 'click', selector: '#method_free', delay: 2000 },
-      { type: 'wait-captcha', then: [{ type: 'click', selector: '#downloadbtn' }] },
-      { type: 'wait-element', selector: '#direct_link > a', then: [{ type: 'redirect-from-href', selector: '#direct_link > a' }] },
+      { type: 'wait-captcha', steps: [{ type: 'click', selector: '#downloadbtn' }] },
+      { type: 'wait-element', selector: '#direct_link > a', steps: [{ type: 'redirect-from-href', selector: '#direct_link > a' }] },
     ],
   },
 ];

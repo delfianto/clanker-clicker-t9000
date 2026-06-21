@@ -27,7 +27,7 @@ export const wpsafeRules: Rule[] = [
     actions: [{
       type: 'wait-element',
       selector: "div[id^='wpsafe'] > a[rel='nofollow'], div[id^='wpsafe'] > a[onclick]",
-      then: [{
+      steps: [{
         type: 'redirect-from-onclick',
         selector: "div[id^='wpsafe'] > a[rel='nofollow'], div[id^='wpsafe'] > a[onclick]",
         extractPattern: ONCLICK_PATTERN,
@@ -41,7 +41,7 @@ export const wpsafeRules: Rule[] = [
     actions: [{
       type: 'wait-element',
       selector: '#wpsafegenerate > #wpsafe-link > a[href], a#btn7[href]',
-      then: [{
+      steps: [{
         type: 'redirect-from-href',
         selector: '#wpsafegenerate > #wpsafe-link > a[href], a#btn7[href]',
       }],
@@ -58,7 +58,7 @@ export const wpsafeRules: Rule[] = [
     actions: [{
       type: 'wait-element',
       selector: "#wpsafe-link a[onclick*='window.open']",
-      then: [{
+      steps: [{
         type: 'redirect-from-onclick',
         selector: "#wpsafe-link a[onclick*='window.open']",
         extractPattern: ONCLICK_PATTERN,

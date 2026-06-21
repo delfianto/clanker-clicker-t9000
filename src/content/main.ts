@@ -1,4 +1,3 @@
-/// <reference path="../types/global.d.ts" />
 import type { CCConfig } from '../types/global';
 
 import { installTimerBoost } from './features/timers';
