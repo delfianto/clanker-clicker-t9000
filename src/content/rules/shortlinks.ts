@@ -53,7 +53,7 @@ export const shortlinkRules: Rule[] = [
   },
   {
     id: "kongutoday-safe-b64",
-    match: hosts("hipsonyc.com", "kongutoday.com", "proappapk.com"),
+    match: hosts("hipsonyc.com", "kongutoday.com"),
     runAt: "start",
     actions: [{ type: "redirect-from-param", param: "safe", decode: "base64" }],
   },
@@ -166,26 +166,19 @@ export const shortlinkRules: Rule[] = [
       },
     ],
   },
-  clickAfter("the2.link", "#get-link-btn", 3000),
-
   // ─── Form submit patterns (cover many sites each) ─────────────────────────
 
   formSubmitThenClick(
     "form-tp-pattern",
     hosts(
-      "aceforce2apk.com",
       "djssmusic.com",
-      "ez4mods.com",
       "fastcars1.com",
       "game5s.com",
       "jansamparks.com",
-      "keedabankingnews.com",
       "sayphotobooth.com",
       "sharedp.com",
       "superheromaniac.com",
       "visastepguide.com",
-      "zygina.com",
-      "btcon.online",
       "topshare.in",
     ),
     "tp",
@@ -196,11 +189,7 @@ export const shortlinkRules: Rule[] = [
     runAt: "loaded",
     actions: [{ type: "wait-captcha", steps: [{ type: "submit", selector: "form[name='dsb']" }] }],
   },
-  formSubmitThenClick(
-    "form-rtg-pattern",
-    hosts("blockjump.in", "carjankaari.com", "jobmatric.com", "techsl.online", "vahansamachar.com"),
-    "rtg",
-  ),
+  formSubmitThenClick("form-rtg-pattern", hosts("carjankaari.com", "vahansamachar.com"), "rtg"),
 
   // ─── Captcha-gated click rules ─────────────────────────────────────────────
 
@@ -237,19 +226,15 @@ export const shortlinkRules: Rule[] = [
       "animerigel.com",
       "encurt4.com",
       "encurtacash.com",
-      "faucetsatoshi.site",
       "fbol.top",
       "kshlink.com",
       "kut.li",
       "oii.si",
       "passivecryptos.xyz",
       "payskip.org",
-      "rslinks.fun",
-      "shortie.sbs",
       "shortlinkdk.com",
       "tfly.link",
       "urlcashdk.xyz",
-      "zippynest.online",
     ),
     runAt: "loaded",
     actions: [

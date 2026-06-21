@@ -60,6 +60,7 @@ export const googleRedirectRule: Rule = {
   id: "google-url-redirect",
   match: "^(www\\.)?google\\.com$",
   pathMatch: "^/url$",
+  priority: 10,
   runAt: "start",
   actions: [
     {
