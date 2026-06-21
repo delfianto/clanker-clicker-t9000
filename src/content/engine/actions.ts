@@ -1,16 +1,22 @@
-import type { RuleAction } from '../../types/rules';
-import { waitForElement, waitForVisible, sleep } from './wait';
-import { waitForCaptcha } from './captcha';
-import { navigateTo, metaRedirect, extractFromParam, extractFromPath, extractFromOnclick } from './redirect';
+import type { RuleAction } from "../../types/rules";
+import { waitForElement, waitForVisible, sleep } from "./wait";
+import { waitForCaptcha } from "./captcha";
+import {
+  navigateTo,
+  metaRedirect,
+  extractFromParam,
+  extractFromPath,
+  extractFromOnclick,
+} from "./redirect";
 
-const CLICK_EVENTS = ['mouseover', 'mousedown', 'mouseup', 'click'] as const;
+const CLICK_EVENTS = ["mouseover", "mousedown", "mouseup", "click"] as const;
 
 export type CustomHandlerRegistry = Map<string, () => void | Promise<void>>;
 
 export async function runActions(
   actions: RuleAction[],
   signal: AbortSignal,
-  registry: CustomHandlerRegistry
+  registry: CustomHandlerRegistry,
 ): Promise<void> {
   for (const action of actions) {
     if (signal.aborted) return;
@@ -21,10 +27,10 @@ export async function runActions(
 async function executeAction(
   action: RuleAction,
   signal: AbortSignal,
-  registry: CustomHandlerRegistry
+  registry: CustomHandlerRegistry,
 ): Promise<void> {
   switch (action.type) {
-    case 'click': {
+    case "click": {
       if (action.delay) await sleep(action.delay);
       if (signal.aborted) return;
       const el = await waitForElement(action.selector, signal);
@@ -32,7 +38,7 @@ async function executeAction(
       break;
     }
 
-    case 'submit': {
+    case "submit": {
       if (action.delay) await sleep(action.delay);
       if (signal.aborted) return;
       const form = await waitForElement(action.selector, signal);
@@ -42,7 +48,7 @@ async function executeAction(
       break;
     }
 
-    case 'wait-element': {
+    case "wait-element": {
       const el = await waitForElement(action.selector, signal);
       if (signal.aborted) return;
       void el;
@@ -50,57 +56,57 @@ async function executeAction(
       break;
     }
 
-    case 'wait-captcha': {
+    case "wait-captcha": {
       await waitForCaptcha(signal);
       if (signal.aborted) return;
       await runActions(action.steps, signal, registry);
       break;
     }
 
-    case 'wait-visibility': {
+    case "wait-visibility": {
       await waitForVisible(action.selector, signal);
       if (signal.aborted) return;
       await runActions(action.steps, signal, registry);
       break;
     }
 
-    case 'redirect-from-href': {
+    case "redirect-from-href": {
       const el = await waitForElement(action.selector, signal);
       const url = (el as HTMLAnchorElement).href;
       if (url) navigateTo(url);
       break;
     }
 
-    case 'redirect-from-onclick': {
+    case "redirect-from-onclick": {
       const el = await waitForElement(action.selector, signal);
       const url = extractFromOnclick(el, action.extractPattern);
       if (url) navigateTo(url);
       break;
     }
 
-    case 'redirect-from-param': {
+    case "redirect-from-param": {
       const url = extractFromParam(
         action.param,
-        action.decode ?? 'none',
-        action.hashParams ?? false
+        action.decode ?? "none",
+        action.hashParams ?? false,
       );
       if (url) {
-        const final = (action.prefix ?? '') + url;
+        const final = (action.prefix ?? "") + url;
         navigateTo(final);
       }
       break;
     }
 
-    case 'redirect-from-path': {
-      const url = extractFromPath(action.pattern, action.decode ?? 'none');
+    case "redirect-from-path": {
+      const url = extractFromPath(action.pattern, action.decode ?? "none");
       if (url) {
-        const final = (action.prefix ?? '') + url;
+        const final = (action.prefix ?? "") + url;
         navigateTo(final);
       }
       break;
     }
 
-    case 'remove-attr': {
+    case "remove-attr": {
       const els = Array.from(document.querySelectorAll(action.selector));
       for (const el of els) {
         for (const attr of action.attrs) {
@@ -110,7 +116,7 @@ async function executeAction(
       break;
     }
 
-    case 'custom': {
+    case "custom": {
       const handler = registry.get(action.handler);
       if (handler) {
         await handler();
@@ -123,8 +129,8 @@ async function executeAction(
 }
 
 function simulateClick(el: Element): void {
-  el.removeAttribute('disabled');
-  el.removeAttribute('target');
+  el.removeAttribute("disabled");
+  el.removeAttribute("target");
   for (const type of CLICK_EVENTS) {
     el.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true }));
   }
@@ -136,6 +142,6 @@ export function metaNavigate(url: string): void {
 
 export function selectText(el: HTMLInputElement | HTMLTextAreaElement, value: string): void {
   el.value = value;
-  el.dispatchEvent(new Event('input', { bubbles: true }));
-  el.dispatchEvent(new Event('change', { bubbles: true }));
+  el.dispatchEvent(new Event("input", { bubbles: true }));
+  el.dispatchEvent(new Event("change", { bubbles: true }));
 }

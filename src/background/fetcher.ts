@@ -1,8 +1,8 @@
-const ALLOWED = new Set(['http:', 'https:']);
+const ALLOWED = new Set(["http:", "https:"]);
 
 export async function crossOriginFetch(
   url: string,
-  method = 'GET',
+  method = "GET",
   headers: Record<string, string> = {},
   body?: string,
 ): Promise<string> {
@@ -22,7 +22,7 @@ export async function crossOriginFetch(
     const res = await fetch(url, {
       method,
       headers,
-      credentials: 'omit',
+      credentials: "omit",
       signal: controller.signal,
       ...(body != null ? { body } : {}),
     });
