@@ -1,6 +1,8 @@
 import type { RuleAction } from "../../types/rules";
 import { waitForElement, waitForVisible, sleep } from "./wait";
 import { waitForCaptcha } from "./captcha";
+import { qs } from "./dom";
+import { makeCtx } from "./ctx";
 import {
   navigateTo,
   metaRedirect,
@@ -11,24 +13,14 @@ import {
 
 const CLICK_EVENTS = ["mouseover", "mousedown", "mouseup", "click"] as const;
 
-export type CustomHandlerRegistry = Map<string, () => void | Promise<void>>;
-
-export async function runActions(
-  actions: RuleAction[],
-  signal: AbortSignal,
-  registry: CustomHandlerRegistry,
-): Promise<void> {
+export async function runActions(actions: RuleAction[], signal: AbortSignal): Promise<void> {
   for (const action of actions) {
     if (signal.aborted) return;
-    await executeAction(action, signal, registry);
+    await executeAction(action, signal);
   }
 }
 
-async function executeAction(
-  action: RuleAction,
-  signal: AbortSignal,
-  registry: CustomHandlerRegistry,
-): Promise<void> {
+async function executeAction(action: RuleAction, signal: AbortSignal): Promise<void> {
   switch (action.type) {
     case "click": {
       if (action.delay) await sleep(action.delay);
@@ -52,27 +44,39 @@ async function executeAction(
       const el = await waitForElement(action.selector, signal);
       if (signal.aborted) return;
       void el;
-      await runActions(action.steps, signal, registry);
+      await runActions(action.steps, signal);
       break;
     }
 
     case "wait-captcha": {
       await waitForCaptcha(signal);
       if (signal.aborted) return;
-      await runActions(action.steps, signal, registry);
+      await runActions(action.steps, signal);
       break;
     }
 
     case "wait-visibility": {
       await waitForVisible(action.selector, signal);
       if (signal.aborted) return;
-      await runActions(action.steps, signal, registry);
+      await runActions(action.steps, signal);
       break;
     }
 
     case "redirect-from-href": {
       const el = await waitForElement(action.selector, signal);
       const url = (el as HTMLAnchorElement).href;
+      if (url) navigateTo(url);
+      break;
+    }
+
+    case "redirect-from-attr": {
+      const el =
+        action.wait === false ? qs(action.selector) : await waitForElement(action.selector, signal);
+      if (!el) break;
+      // Prefer the resolved DOM property (e.g. anchor.href → absolute URL),
+      // falling back to the raw attribute for non-anchor elements.
+      const prop = (el as unknown as Record<string, unknown>)[action.attr];
+      const url = typeof prop === "string" && prop ? prop : el.getAttribute(action.attr);
       if (url) navigateTo(url);
       break;
     }
@@ -106,6 +110,22 @@ async function executeAction(
       break;
     }
 
+    case "redirect-template": {
+      const m = location.pathname.match(new RegExp(action.from));
+      if (!m) break;
+      const target = action.to.replace(/\$(\d+)/g, (_full, d: string) => m[Number(d)] ?? "");
+      // Resolve relative templates (e.g. "/api/file/$1") against the current
+      // origin so navigateTo's http(s) guard passes.
+      navigateTo(new URL(target, location.href).href);
+      break;
+    }
+
+    case "rewrite-url": {
+      const next = location.href.replace(action.find, action.replace);
+      if (next !== location.href) navigateTo(next);
+      break;
+    }
+
     case "remove-attr": {
       const els = Array.from(document.querySelectorAll(action.selector));
       for (const el of els) {
@@ -116,13 +136,8 @@ async function executeAction(
       break;
     }
 
-    case "custom": {
-      const handler = registry.get(action.handler);
-      if (handler) {
-        await handler();
-      } else {
-        console.warn(`[CC] No handler registered: ${action.handler}`);
-      }
+    case "run": {
+      await action.run(makeCtx(signal));
       break;
     }
   }

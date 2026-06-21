@@ -1,6 +1,5 @@
 import type { Rule } from "../../types/rules";
 import type { CCConfig } from "../../types/global";
-import type { CustomHandlerRegistry } from "./actions";
 import { runActions } from "./actions";
 
 export function matchRule(rules: Rule[], hostname: string, pathname: string): Rule | undefined {
@@ -13,17 +12,13 @@ export function matchRule(rules: Rule[], hostname: string, pathname: string): Ru
   return undefined;
 }
 
-export function runRule(
-  rule: Rule,
-  _config: CCConfig,
-  registry: CustomHandlerRegistry = new Map(),
-): void {
+export function runRule(rule: Rule, _config: CCConfig): void {
   const controller = new AbortController();
 
   window.addEventListener("pagehide", () => controller.abort(), { once: true });
 
   const execute = (): void => {
-    runActions(rule.actions, controller.signal, registry).catch((err) => {
+    runActions(rule.actions, controller.signal).catch((err) => {
       if (err instanceof DOMException && err.name === "AbortError") return;
       console.warn(`[CC] Rule "${rule.id}" failed:`, err);
     });

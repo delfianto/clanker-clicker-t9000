@@ -1,6 +1,4 @@
 import type { Rule } from "../../../types/rules";
-import type { CustomHandlerRegistry } from "../../engine/actions";
-import { navigateTo } from "../../engine/redirect";
 
 // Sites that abuse google.com/url?q= for redirect cloaking but lead to ad-spam domains.
 // Consolidated from the duplicate lists in the original source (lines 388 + 531).
@@ -63,24 +61,23 @@ export const googleRedirectRule: Rule = {
   match: "^(www\\.)?google\\.com$",
   pathMatch: "^/url$",
   runAt: "start",
-  actions: [{ type: "custom", handler: "google-url-q" }],
+  actions: [
+    {
+      type: "run",
+      run: ({ params, navigateTo }) => {
+        const target = params.get("q");
+        if (!target) return;
+        try {
+          const host = new URL(target).hostname.replace(/^www\./, "");
+          const blocked = GOOGLE_REDIRECT_BLOCKED_DOMAINS.some(
+            (d) => host === d || host.endsWith("." + d),
+          );
+          if (blocked) return;
+          navigateTo(target);
+        } catch {
+          /* invalid URL */
+        }
+      },
+    },
+  ],
 };
-
-export function registerGoogleRedirectHandler(registry: CustomHandlerRegistry): void {
-  registry.set("google-url-q", () => {
-    const params = new URLSearchParams(location.search);
-    const target = params.get("q");
-    if (!target) return;
-
-    try {
-      const host = new URL(target).hostname.replace(/^www\./, "");
-      const blocked = GOOGLE_REDIRECT_BLOCKED_DOMAINS.some(
-        (d) => host === d || host.endsWith("." + d),
-      );
-      if (blocked) return;
-      navigateTo(target);
-    } catch {
-      /* invalid URL */
-    }
-  });
-}
