@@ -42,7 +42,11 @@ export type Rule = {
   match: string;
   exclude?: string;
   pathMatch?: string;
+  /** Higher runs first (default 0). Lets specific rules win without relying on array order. */
+  priority?: number;
   runAt: "start" | "loaded";
+  /** Allow this rule to run inside subframes. Default: top document only. */
+  allowFrames?: boolean;
   actions: RuleAction[];
   requiresFeature?: keyof Settings;
 };
