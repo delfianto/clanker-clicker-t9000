@@ -5,39 +5,6 @@ const DL: Rule["requiresFeature"] = "autoDL";
 
 export const downloadRules: Rule[] = [
   {
-    id: "katfile",
-    match: "^katfile\\.com$",
-    runAt: "loaded",
-    requiresFeature: DL,
-    actions: [
-      { type: "click", selector: "#fbtn1", delay: 2000 },
-      { type: "wait-captcha", steps: [{ type: "click", selector: "#downloadbtn" }] },
-      {
-        type: "wait-element",
-        selector: "#dlink",
-        steps: [{ type: "redirect-from-href", selector: "#dlink" }],
-      },
-    ],
-  },
-  {
-    id: "usersdrive",
-    match: "^(usersdrive|ddownload)\\.com$",
-    runAt: "loaded",
-    requiresFeature: DL,
-    actions: [
-      { type: "click", selector: "#fbtn1", delay: 2000 },
-      { type: "wait-captcha", steps: [{ type: "click", selector: "#downloadbtn" }] },
-    ],
-  },
-  {
-    id: "pixeldrain",
-    match: "^pixeldrain\\.com$",
-    pathMatch: "^/u/",
-    runAt: "start",
-    requiresFeature: DL,
-    actions: [{ type: "custom", handler: "pixeldrain-direct" }],
-  },
-  {
     id: "dailyuploads",
     match: "^dailyuploads\\.net$",
     runAt: "loaded",
@@ -46,6 +13,23 @@ export const downloadRules: Rule[] = [
       { type: "click", selector: "#fbtn1", delay: 2000 },
       { type: "wait-captcha", steps: [{ type: "click", selector: "#downloadbtn" }] },
     ],
+  },
+  {
+    id: "ddownload",
+    match: "^ddownload\\.com$",
+    runAt: "loaded",
+    requiresFeature: DL,
+    actions: [
+      { type: "click", selector: "#method_free", delay: 2000 },
+      { type: "wait-captcha", steps: [{ type: "click", selector: "#downloadbtn" }] },
+    ],
+  },
+  {
+    id: "drive-google",
+    match: "^drive\\.google\\.com$",
+    runAt: "loaded",
+    requiresFeature: DL,
+    actions: [{ type: "custom", handler: "google-drive-direct" }],
   },
   {
     id: "gofile",
@@ -61,6 +45,21 @@ export const downloadRules: Rule[] = [
     ],
   },
   {
+    id: "katfile",
+    match: "^katfile\\.com$",
+    runAt: "loaded",
+    requiresFeature: DL,
+    actions: [
+      { type: "click", selector: "#fbtn1", delay: 2000 },
+      { type: "wait-captcha", steps: [{ type: "click", selector: "#downloadbtn" }] },
+      {
+        type: "wait-element",
+        selector: "#dlink",
+        steps: [{ type: "redirect-from-href", selector: "#dlink" }],
+      },
+    ],
+  },
+  {
     id: "mediafire",
     match: "^(www\\.)?mediafire\\.com$",
     pathMatch: "^/file/",
@@ -69,11 +68,12 @@ export const downloadRules: Rule[] = [
     actions: [{ type: "custom", handler: "mediafire-direct" }],
   },
   {
-    id: "drive-google",
-    match: "^drive\\.google\\.com$",
-    runAt: "loaded",
+    id: "pixeldrain",
+    match: "^pixeldrain\\.com$",
+    pathMatch: "^/u/",
+    runAt: "start",
     requiresFeature: DL,
-    actions: [{ type: "custom", handler: "google-drive-direct" }],
+    actions: [{ type: "custom", handler: "pixeldrain-direct" }],
   },
   {
     id: "turbobit",
@@ -91,16 +91,6 @@ export const downloadRules: Rule[] = [
     ],
   },
   {
-    id: "ddownload",
-    match: "^ddownload\\.com$",
-    runAt: "loaded",
-    requiresFeature: DL,
-    actions: [
-      { type: "click", selector: "#method_free", delay: 2000 },
-      { type: "wait-captcha", steps: [{ type: "click", selector: "#downloadbtn" }] },
-    ],
-  },
-  {
     id: "uploadev",
     match: "^uploadev\\.org$",
     runAt: "loaded",
@@ -113,6 +103,16 @@ export const downloadRules: Rule[] = [
         selector: "#direct_link > a",
         steps: [{ type: "redirect-from-href", selector: "#direct_link > a" }],
       },
+    ],
+  },
+  {
+    id: "usersdrive",
+    match: "^usersdrive\\.com$",
+    runAt: "loaded",
+    requiresFeature: DL,
+    actions: [
+      { type: "click", selector: "#fbtn1", delay: 2000 },
+      { type: "wait-captcha", steps: [{ type: "click", selector: "#downloadbtn" }] },
     ],
   },
 ];
