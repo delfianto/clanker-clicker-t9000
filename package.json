@@ -11,14 +11,18 @@
     "dev:firefox": "BROWSER=firefox vp build --watch",
     "check": "vp check",
     "lint": "vp lint src/",
-    "fmt": "vp fmt src/"
+    "fmt": "vp fmt src/",
+    "test": "bun test",
+    "test:coverage": "bun test --coverage"
   },
   "dependencies": {
     "webextension-polyfill": "^0.12.0"
   },
   "devDependencies": {
+    "@happy-dom/global-registrator": "^20.10.6",
     "@types/chrome": "^0.0.268",
     "@types/webextension-polyfill": "^0.12.0",
+    "happy-dom": "^20.10.6",
     "typescript": "rc",
     "vite-plugin-web-extension": "latest",
     "vite-plus": "latest"

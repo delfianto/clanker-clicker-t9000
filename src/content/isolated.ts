@@ -1,15 +1,6 @@
 import browser from "webextension-polyfill";
 import type { Settings, CCConfig } from "../types/global";
-
-const DEFAULT_SETTINGS: Settings = {
-  enabled: true,
-  timerBoost: { enabled: false, threshold: 1000 },
-  popupBlocker: false,
-  antiAdblock: false,
-  cloudflareTurnstile: true,
-  captchaSolver: { provider: "none", apiKey: "" },
-  autoDL: false,
-};
+import { DEFAULT_SETTINGS } from "../settings/schema";
 
 async function init(): Promise<void> {
   let settings: Settings;
@@ -27,9 +18,7 @@ async function init(): Promise<void> {
   // CustomEvent on document crosses ISOLATED→MAIN boundary without triggering CSP —
   // DOM events are not script execution. main.ts registers its listener synchronously
   // at startup, before this async path resumes after the storage await.
-  document.dispatchEvent(
-    new CustomEvent("__cc_config__", { detail: JSON.stringify(config) }),
-  );
+  document.dispatchEvent(new CustomEvent("__cc_config__", { detail: JSON.stringify(config) }));
 
   window.addEventListener("message", (event: MessageEvent) => {
     if (event.source !== window || event.data?.type !== "CC_REQUEST") return;

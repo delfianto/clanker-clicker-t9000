@@ -1,15 +1,6 @@
 import browser from "webextension-polyfill";
 import type { Settings } from "../types/global";
-
-const DEFAULT_SETTINGS: Settings = {
-  enabled: true,
-  timerBoost: { enabled: false, threshold: 1000 },
-  popupBlocker: false,
-  antiAdblock: false,
-  cloudflareTurnstile: true,
-  captchaSolver: { provider: "none", apiKey: "" },
-  autoDL: false,
-};
+import { DEFAULT_SETTINGS } from "../settings/schema";
 
 function $<T extends HTMLElement>(id: string): T {
   return document.getElementById(id) as T;

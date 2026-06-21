@@ -7,13 +7,13 @@ Personal tool; no external server dependencies, zero telemetry, MIT licensed.
 
 ## Stack
 
-| Tool | Version | Purpose |
-|------|---------|---------|
-| TypeScript | 7.0 RC (`rc` tag) | Language — strict, no legacy cruft |
-| Bun | 1.x | Package manager + script runner (not npm/yarn) |
-| vite-plus (`vp`) | latest | Unified VoidZero toolchain — bundler, linter (oxlint), formatter (oxfmt), type checker |
-| vite-plugin-web-extension | 4.x | Multi-entry extension build + manifest generation |
-| webextension-polyfill | 0.12 | Unified `browser.*` API surface across Chrome/Firefox |
+| Tool                      | Version           | Purpose                                                                                |
+| ------------------------- | ----------------- | -------------------------------------------------------------------------------------- |
+| TypeScript                | 7.0 RC (`rc` tag) | Language — strict, no legacy cruft                                                     |
+| Bun                       | 1.x               | Package manager + script runner (not npm/yarn)                                         |
+| vite-plus (`vp`)          | latest            | Unified VoidZero toolchain — bundler, linter (oxlint), formatter (oxfmt), type checker |
+| vite-plugin-web-extension | 4.x               | Multi-entry extension build + manifest generation                                      |
+| webextension-polyfill     | 0.12              | Unified `browser.*` API surface across Chrome/Firefox                                  |
 
 All commands go through `bun run <script>` or the `vp` CLI directly.  
 **Never use npm or npx.**
@@ -29,9 +29,37 @@ bun run dev             # watch mode (Chrome)
 bun run check           # vp check — fmt + oxlint + tsc (run before committing)
 bun run lint            # vp lint src/ — oxlint only
 bun run fmt             # vp fmt src/ — oxfmt format
+bun run test            # bun test — unit suite (run with check before merging)
+bun run test:coverage   # bun test --coverage
 ```
 
 Load the extension: Chrome → `chrome://extensions` → Developer mode → Load unpacked → `build/chrome/`
+
+---
+
+## Testing
+
+Unit tests live in `test/` (mirrors `src/`), run by **`bun test`**. A `bunfig.toml`
+preloads `test/setup.ts`, which registers **happy-dom** so DOM-dependent engine code
+(actions, wait, ctx, features) runs headless. Pre-merge gate: `bun run check && bun run test`.
+
+What's covered (≈80% lines; declarative core is ~100%):
+
+- **Pure logic** — `decode`, builders (`exact`/`hosts`/…), `matchRule` + priority sort,
+  `activeFeatures` gating, `DEFAULT_SETTINGS`.
+- **Rule-set invariants** (`test/rules/ruleset.test.ts`) — unique ids, regexes compile,
+  every action well-formed, `requiresFeature` valid, priority-sorted, **plus a host→rule-id
+  matching table**. This is the guard that makes rule edits safe; add a case when you add a host.
+- **DOM-backed** — every `RuleAction` executor (via happy-dom, spying `location.assign`),
+  `waitForElement`, `makeCtx`, `runRule` (incl. the Cloudflare-interstitial guard), and the
+  cleanly-reversible features (popup-blocker, timers, adblock, visibility).
+
+Deliberately **not** unit-tested (global-prototype patching / polling — verify by live
+smoke-test): `features/trust.ts`, `features/cloudflare.ts`, `engine/captcha.ts`.
+
+Notes: tests import from `bun:test` explicitly (no globals). `test/` is not in the tsc
+`include` (keeps bun's test types out of the extension typecheck); it's still fmt+lint-checked
+by `vp check`.
 
 ---
 
@@ -47,10 +75,11 @@ src/
     main.ts           # MAIN world entry — receives config, installs features + rules
     engine/
       dispatcher.ts   # Rule matching (first-match-wins on hostname regex)
-      actions.ts      # Action executor: click/submit/redirect/wait-*/custom
+      actions.ts      # Action executor: click/submit/redirect-*/wait-*/rewrite-url/run
+      ctx.ts          # makeCtx — builds the RuleCtx toolkit handed to `run` actions
       dom.ts          # qs/qsa wrappers
       wait.ts         # waitForElement, waitForVisible, sleep — all with maxWait timeout
-      redirect.ts     # navigateTo, decodeParam, extractFromParam
+      redirect.ts     # navigateTo, decode, extractFromParam/Path/Onclick
       captcha.ts      # waitForCaptcha — hCaptcha/Turnstile/reCAPTCHA detection
     features/
       timers.ts       # installTimerBoost — setTimeout/setInterval acceleration
@@ -60,17 +89,21 @@ src/
       adblock.ts
       cloudflare.ts   # Turnstile auto-solve hook
     rules/
-      index.ts        # Combines all rule arrays, registers all custom handlers
-      shortlinks.ts   # ~50 site rules (URL params, clicks, form submits, captcha-gated)
+      index.ts        # getAllRules() — combines all rule arrays
+      builders.ts     # exact/hosts/paramRedirect/waitRedirect/... rule-builder helpers
+      shortlinks.ts   # site rules (URL params, clicks, form submits, captcha-gated)
       wpsafe.ts       # WordPress wpsafelink pattern rules
       downloads.ts    # File host auto-download rules (requiresFeature: autoDL)
       custom/
-        ouo.ts        # ouo.io/ouo.press multi-step handler + misc handlers
+        google-redirect.ts  # google.com/url?q= blocklist filter (uses a `run` action)
   popup/
     index.html / index.ts / styles.css
+  settings/
+    schema.ts         # DEFAULT_SETTINGS — single source of defaults (no DOM/feature imports)
+    install.ts        # installFeatures(settings) — MAIN-world feature install order
   types/
     global.d.ts       # Settings, CCConfig, window.__CC_CONFIG
-    rules.d.ts        # Rule, RuleAction, DecodeStrategy
+    rules.d.ts        # Rule, RuleAction, RuleCtx, DecodeStrategy
 public/
   icons/              # Extension icons (Fluent Emoji 3D robot, MIT)
 ```
@@ -121,10 +154,26 @@ document.dispatchEvent(
 
 ### Adding a new site rule
 
-1. Add to the appropriate array in `shortlinks.ts` (or `wpsafe.ts` / `downloads.ts`)
-2. If the site needs custom JS logic: add a handler to `rules/custom/ouo.ts` via `registry.set()`
-3. Register the handler key in the rule's `actions: [{ type: 'custom', handler: 'your-key' }]`
-4. Run `bun run check` — fix any lint/type errors before committing
+Most sites are one of a few common shapes — reach for a builder from `rules/builders.ts`
+before hand-writing a rule object.
+
+1. **Common shapes** — add a one-liner to the array in `shortlinks.ts` (or `wpsafe.ts` /
+   `downloads.ts`):
+   - `paramRedirect("host.com", "url", "base64")` — destination sits in a query param
+   - `waitRedirect("host.com", "a.selector")` — wait for an element, redirect to its href
+   - `redirectHref("host.com", ".skip")` / `clickAfter("host.com", "#btn", 2000)`
+   - `formSubmitThenClick(id, hosts("a.com", "b.com"), "tp")` — submit form, click follow-up
+   - Matching helpers: `exact("a.com")` (single host) and `hosts("a.com", "b.com")` (multi) —
+     both produce **anchored** `^…$` regexes and handle escaping.
+2. **Declarative actions** (no JS) — `redirect-from-param/path/attr`, `redirect-template`
+   (path→URL template, e.g. `{ from: "^/u/(.+)$", to: "/api/file/$1?download" }`), `rewrite-url`
+   (string replace on the URL), `wait-captcha`, `remove-attr`, … See `RuleAction` in
+   `types/rules.d.ts`.
+3. **Bespoke logic** — use a `run` action with an inline, typed closure:
+   `actions: [{ type: "run", run: async (ctx) => { … } }]`. `ctx` (`RuleCtx`) provides
+   `params`, `url`, `navigateTo`, `waitForElement`, `click`, `qs`, `decode`, `signal`.
+   No handler registry, no string keys.
+4. Run `bun run check` — fix any lint/type errors before committing.
 
 ---
 
@@ -145,6 +194,7 @@ Config lives inside `vite.config.ts` under `lint:` and `fmt:` blocks.
 Standalone `oxlint.json` is **not picked up** by `vp` — don't create one.
 
 Relevant active rules:
+
 - `no-console: off` — console usage allowed (debugging)
 - `unicorn/no-thenable: error` — any property named `then` on an object looks like a Promise; use `steps` instead in rule action types
 
