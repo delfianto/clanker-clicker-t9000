@@ -62,12 +62,12 @@ function isCaptchaSolved(): boolean {
     if (r && r.length > 0) return true;
   }
 
-  // textarea is populated for both v2-checkbox and v2-invisible reCAPTCHA
-  const gTextarea = qs("textarea[name='g-recaptcha-response']") as HTMLTextAreaElement | null;
-  if (gTextarea && gTextarea.value.length > 0) return true;
-
-  if (qs("iframe[title='reCAPTCHA']")) {
-    const r = w.grecaptcha?.getResponse();
+  // Use the live grecaptcha API for both checkbox and invisible variants.
+  // Deliberately avoid reading textarea[name='g-recaptcha-response'] directly —
+  // browsers restore its stale value on page refresh, causing a false positive
+  // that fires before reCAPTCHA has rendered on the current load.
+  if (w.grecaptcha && typeof w.grecaptcha.getResponse === "function") {
+    const r = w.grecaptcha.getResponse();
     if (r && r.length > 0) return true;
   }
 
