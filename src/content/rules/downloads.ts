@@ -29,7 +29,21 @@ export const downloadRules: Rule[] = [
     match: "^drive\\.google\\.com$",
     runAt: "loaded",
     requiresFeature: DL,
-    actions: [{ type: "custom", handler: "google-drive-direct" }],
+    actions: [
+      {
+        type: "run",
+        run: ({ navigateTo, qs }) => {
+          const fileId = location.href.split("/").slice(-2)[0];
+          if (location.href.includes("/file/d/") && fileId) {
+            navigateTo(
+              `https://drive.usercontent.google.com/download?id=${fileId}&export=download`,
+            );
+          } else if (location.href.includes("uc?id")) {
+            qs<HTMLFormElement>("#download-form")?.submit();
+          }
+        },
+      },
+    ],
   },
   {
     id: "gofile",
@@ -65,7 +79,7 @@ export const downloadRules: Rule[] = [
     pathMatch: "^/file/",
     runAt: "loaded",
     requiresFeature: DL,
-    actions: [{ type: "custom", handler: "mediafire-direct" }],
+    actions: [{ type: "redirect-from-attr", selector: ".download_link .input", attr: "href" }],
   },
   {
     id: "pixeldrain",
@@ -73,7 +87,7 @@ export const downloadRules: Rule[] = [
     pathMatch: "^/u/",
     runAt: "start",
     requiresFeature: DL,
-    actions: [{ type: "custom", handler: "pixeldrain-direct" }],
+    actions: [{ type: "redirect-template", from: "^/u/(.+)$", to: "/api/file/$1?download" }],
   },
   {
     id: "turbobit",
@@ -81,7 +95,7 @@ export const downloadRules: Rule[] = [
     runAt: "loaded",
     requiresFeature: DL,
     actions: [
-      { type: "custom", handler: "turbobit-nopay" },
+      { type: "redirect-from-attr", selector: "#nopay-btn", attr: "href", wait: false },
       { type: "wait-captcha", steps: [{ type: "click", selector: "#submit" }] },
       {
         type: "wait-element",
