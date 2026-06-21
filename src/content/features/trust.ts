@@ -11,13 +11,18 @@ export function installTrustProxy(): () => void {
     }
 
     const wrapped = function (this: EventTarget, event: Event): void {
-      let cloned: Event;
-      try {
-        cloned = cloneWithTrust(event);
-      } catch {
-        return (listener as EventListener).call(this, event);
-      }
-      return (listener as EventListener).call(this, cloned);
+      // Proxy the original event rather than cloning it — cloning drops event.target,
+      // event.currentTarget, and other dispatch-time properties that third-party scripts
+      // (e.g. reCAPTCHA) rely on for bot detection. Proxying preserves everything and
+      // only overrides isTrusted so our synthetic simulateClick events are accepted.
+      const proxied = new Proxy(event, {
+        get(target, prop) {
+          if (prop === "isTrusted") return true;
+          const val = Reflect.get(target, prop, target);
+          return typeof val === "function" ? val.bind(target) : val;
+        },
+      });
+      return (listener as EventListener).call(this, proxied as Event);
     };
 
     return origAddEventListener.call(this, type, wrapped, options);
@@ -26,46 +31,4 @@ export function installTrustProxy(): () => void {
   return () => {
     EventTarget.prototype.addEventListener = origAddEventListener;
   };
-}
-
-function cloneWithTrust(event: Event): Event {
-  let cloned: Event;
-
-  if (event instanceof MouseEvent) {
-    cloned = new MouseEvent(event.type, {
-      bubbles: event.bubbles,
-      cancelable: event.cancelable,
-      composed: event.composed,
-      clientX: event.clientX,
-      clientY: event.clientY,
-      button: event.button,
-      buttons: event.buttons,
-    });
-  } else if (event instanceof KeyboardEvent) {
-    cloned = new KeyboardEvent(event.type, {
-      bubbles: event.bubbles,
-      cancelable: event.cancelable,
-      composed: event.composed,
-      key: event.key,
-      code: event.code,
-      ctrlKey: event.ctrlKey,
-      shiftKey: event.shiftKey,
-      altKey: event.altKey,
-      metaKey: event.metaKey,
-    });
-  } else {
-    cloned = new Event(event.type, {
-      bubbles: event.bubbles,
-      cancelable: event.cancelable,
-      composed: event.composed,
-    });
-  }
-
-  return new Proxy(cloned, {
-    get(target, prop) {
-      if (prop === "isTrusted") return true;
-      const val = Reflect.get(target, prop, target);
-      return typeof val === "function" ? val.bind(target) : val;
-    },
-  });
 }
