@@ -50,16 +50,25 @@ export function waitForCaptcha(
 function isCaptchaSolved(): boolean {
   const w = window as CaptchaWindow;
 
-  if (qs(".iconcaptcha-modal__body-checkmark")) return true;
+  if (qs(".iconcaptcha-modal__body-checkmark")) {
+    console.debug("[CC] captcha solved: iconcaptcha");
+    return true;
+  }
 
   if (qs("iframe[src^='https://newassets.hcaptcha.com']")) {
     const r = w.hcaptcha?.getResponse();
-    if (r && r.length > 0) return true;
+    if (r && r.length > 0) {
+      console.debug("[CC] captcha solved: hcaptcha");
+      return true;
+    }
   }
 
   if (qs("input[name='cf-turnstile-response']")) {
     const r = w.turnstile?.getResponse();
-    if (r && r.length > 0) return true;
+    if (r && r.length > 0) {
+      console.debug("[CC] captcha solved: turnstile");
+      return true;
+    }
   }
 
   // Use the live grecaptcha API for both checkbox and invisible variants.
@@ -68,7 +77,10 @@ function isCaptchaSolved(): boolean {
   // that fires before reCAPTCHA has rendered on the current load.
   if (w.grecaptcha && typeof w.grecaptcha.getResponse === "function") {
     const r = w.grecaptcha.getResponse();
-    if (r && r.length > 0) return true;
+    if (r && r.length > 0) {
+      console.debug("[CC] captcha solved: grecaptcha token=" + r.slice(0, 20) + "…");
+      return true;
+    }
   }
 
   return false;

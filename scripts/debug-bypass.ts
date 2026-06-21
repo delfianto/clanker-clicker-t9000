@@ -32,6 +32,18 @@ const ctx = await chromium.launchPersistentContext(userDataDir, {
   args: [`--disable-extensions-except=${extPath}`, `--load-extension=${extPath}`, "--no-sandbox"],
 });
 
+type CaptchaState = {
+  gRecaptchaDiv: boolean;
+  gRecaptchaIframe: boolean;
+  textareaValue: string | null;
+  hcaptchaIframe: boolean;
+  turnstileInput: boolean;
+  iconcaptcha: boolean;
+  invisibleShortlink: boolean;
+  grecaptchaExists: boolean;
+  grecaptchaResponse: string;
+};
+
 async function dumpPage(page: Page): Promise<void> {
   hopCount++;
   const hop = hopCount;
@@ -91,6 +103,29 @@ async function dumpPage(page: Page): Promise<void> {
         if (win[key] !== undefined) jsVars[key] = String(win[key]).slice(0, 200);
       }
 
+      const w = window as Window & { grecaptcha?: { getResponse(): string } };
+      const captcha: CaptchaState = {
+        gRecaptchaDiv: !!document.querySelector(".g-recaptcha"),
+        gRecaptchaIframe: !!document.querySelector("iframe[title='reCAPTCHA']"),
+        textareaValue:
+          (
+            document.querySelector<HTMLTextAreaElement>('textarea[name="g-recaptcha-response"]')
+              ?.value ?? null
+          )?.slice(0, 30) ?? null,
+        hcaptchaIframe: !!document.querySelector("iframe[src^='https://newassets.hcaptcha.com']"),
+        turnstileInput: !!document.querySelector("input[name='cf-turnstile-response']"),
+        iconcaptcha: !!document.querySelector(".iconcaptcha-modal__body-checkmark"),
+        invisibleShortlink: !!document.querySelector("#invisibleCaptchaShortlink"),
+        grecaptchaExists: typeof w.grecaptcha !== "undefined",
+        grecaptchaResponse: (() => {
+          try {
+            return w.grecaptcha?.getResponse()?.slice(0, 30) ?? "N/A";
+          } catch (e) {
+            return "ERR:" + (e as Error).message;
+          }
+        })(),
+      };
+
       return {
         title: document.title,
         url: location.href,
@@ -98,6 +133,7 @@ async function dumpPage(page: Page): Promise<void> {
         clickables,
         dataAttrs,
         jsVars,
+        captcha,
       };
     })
     .catch((e: Error) => ({ error: e.message }));
@@ -110,6 +146,7 @@ async function dumpPage(page: Page): Promise<void> {
     return;
   }
   console.log(`TITLE: ${dump.title}`);
+  console.log(`\n── captcha state ──\n${JSON.stringify(dump.captcha, null, 2)}`);
   if (dump.forms.length) console.log(`\n── forms ──\n${JSON.stringify(dump.forms, null, 2)}`);
   else console.log("\n  (no forms)");
   if (dump.clickables.length)
