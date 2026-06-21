@@ -42,11 +42,12 @@ export const shortlinkRules: Rule[] = [
     runAt: "start",
     actions: [{ type: "redirect-from-param", param: "link", decode: "uri" }],
   },
+  // ouo handled entirely by custom handler (checks ?s= param first, then waits for button)
   {
-    id: "ouo-s-param",
+    id: "ouo",
     match: "^ouo\\.(io|press)$",
-    runAt: "start",
-    actions: [{ type: "redirect-from-param", param: "s", decode: "none" }],
+    runAt: "loaded",
+    actions: [{ type: "custom", handler: "ouo" }],
   },
 
   // Base64-encoded URL params
@@ -139,12 +140,6 @@ export const shortlinkRules: Rule[] = [
     match: "^keeplinks\\.org$",
     runAt: "loaded",
     actions: [{ type: "click", selector: "#btnchange", delay: 2000 }],
-  },
-  {
-    id: "ouo-click",
-    match: "^ouo\\.(io|press)$",
-    runAt: "loaded",
-    actions: [{ type: "click", selector: "button#btn-main", delay: 4000 }],
   },
   {
     id: "paycut-path-strip",

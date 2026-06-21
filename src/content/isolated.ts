@@ -24,36 +24,17 @@ async function init(): Promise<void> {
 
   const config: CCConfig = { settings, timestamp: Date.now() };
 
-  // Inject config into MAIN world using scripting API (guaranteed ordering)
-  try {
-    const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-    if (tab?.id != null) {
-      await browser.scripting.executeScript({
-        target: { tabId: tab.id, allFrames: false },
-        world: "MAIN" as browser.Scripting.ExecutionWorld,
-        func: (cfg: CCConfig) => {
-          window.__CC_CONFIG = cfg;
-        },
-        args: [config],
-      });
-    }
-  } catch {
-    // Fallback: inject via script tag (works for content_scripts context)
-    injectViaScriptTag(config);
-  }
+  // CustomEvent on document crosses ISOLATED→MAIN boundary without triggering CSP —
+  // DOM events are not script execution. main.ts registers its listener synchronously
+  // at startup, before this async path resumes after the storage await.
+  document.dispatchEvent(
+    new CustomEvent("__cc_config__", { detail: JSON.stringify(config) }),
+  );
 
-  // Relay messages from MAIN world that need browser API access
   window.addEventListener("message", (event: MessageEvent) => {
     if (event.source !== window || event.data?.type !== "CC_REQUEST") return;
     handleMainWorldRequest(event.data).catch(() => {});
   });
-}
-
-function injectViaScriptTag(config: CCConfig): void {
-  const script = document.createElement("script");
-  script.textContent = `window.__CC_CONFIG = ${JSON.stringify(config)};`;
-  (document.documentElement ?? document.head).appendChild(script);
-  script.remove();
 }
 
 interface CCRequest {
