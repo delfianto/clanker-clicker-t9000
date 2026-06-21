@@ -27,6 +27,7 @@ export const shortlinkRules: Rule[] = [
   },
   paramRedirect("render-state.to", "link", "uri"),
   paramRedirect("t.me", "url", "uri"),
+  paramRedirect("maloma3arbi.blogspot.com", "link"), // ?link=<plain url>, no decode
   {
     id: "tiktok-target",
     match: "(^|\\.)tiktok\\.com$",
