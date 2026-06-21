@@ -1,12 +1,21 @@
 import type { CustomHandlerRegistry } from "../../engine/actions";
 import { navigateTo } from "../../engine/redirect";
+import { waitForElement } from "../../engine/wait";
 import { qs } from "../../engine/dom";
 
 export function registerOuoHandlers(registry: CustomHandlerRegistry): void {
-  registry.set("ouo-s-param", () => {
-    const params = new URLSearchParams(location.search);
-    const s = params.get("s");
-    if (s) navigateTo(s.startsWith("http") ? s : "https://" + s);
+  // ouo.io flow:
+  //   Step 1: Initial visit → no ?s= param → wait for continue button, click it → form POST
+  //   Step 2: Post-captcha page → ?s=<destination> in URL → extract and redirect
+  registry.set("ouo", async () => {
+    const s = new URLSearchParams(location.search).get("s");
+    if (s) {
+      navigateTo(s.startsWith("http") ? s : "https://" + s);
+      return;
+    }
+
+    const btn = await waitForElement("button#btn-main");
+    (btn as HTMLElement).click();
   });
 
   registry.set("paycut-strip", () => {
