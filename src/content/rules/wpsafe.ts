@@ -5,36 +5,36 @@ import type { Rule } from "../../types/rules";
 
 const ONCLICK_SITES =
   [
+    "admediaflex",
+    "aduzz",
+    "baristakesehatan",
+    "bloggingos",
+    "cdrab",
+    "cryptoinsiderhub",
+    "financekita",
     "financenube",
+    "jobydt",
+    "merekrut",
     "mixrootmods",
+    "omnexa",
     "pastescript",
     "trimorspacks",
-    "aduzz",
     "tutorialsaya",
-    "baristakesehatan",
-    "merekrut",
-    "admediaflex",
-    "cdrab",
-    "financekita",
-    "jobydt",
-    "cryptoinsiderhub",
-    "omnexa",
-    "bloggingos",
   ]
     .map((d) => `${d}\\.com`)
     .join("|") + "|deltabtc\\.xyz|gadifeed\\.in";
 
 const HREF_SITES =
   [
-    "g34new",
-    "dlgamingvn",
-    "v34down",
-    "phimsubmoi",
-    "almontsf",
-    "fitmusclematrix",
-    "amanguides",
-    "michaelemad",
     "7misr4day",
+    "almontsf",
+    "amanguides",
+    "dlgamingvn",
+    "fitmusclematrix",
+    "g34new",
+    "michaelemad",
+    "phimsubmoi",
+    "v34down",
   ]
     .map((d) => `${d}\\.com`)
     .join("|") + "|(nashib|timbertales)\\.xyz";
@@ -86,16 +86,16 @@ export const wpsafeRules: Rule[] = [
         "admediaflex",
         "cdrab",
         "financekita",
-        "jobydt",
         "foodxor",
-        "mealcold",
         "gkvstudy",
-        "thepragatishilclasses",
         "indobo",
-        "pdfvale",
+        "jobydt",
+        "mealcold",
         "mkcgticket",
-        "techtunesbabu",
         "mobilebajar",
+        "pdfvale",
+        "techtunesbabu",
+        "thepragatishilclasses",
       ]
         .map((d) => `${d}\\.com`)
         .join("|") + "|gadifeed\\.in|skyfreecoins\\.top|vertohub\\.space",
