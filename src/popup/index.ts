@@ -39,10 +39,24 @@ function applyToForm(s: Settings): void {
 }
 
 function syncConditional(s: Settings): void {
-  const threshRow = $("threshold-row");
-  const apikeyRow = $("apikey-row");
-  threshRow.classList.toggle("hidden", !s.timerBoost.enabled);
-  apikeyRow.classList.toggle("hidden", s.captchaSolver.provider === "none");
+  $("threshold-row").classList.toggle("hidden", !s.timerBoost.enabled);
+  $("apikey-row").classList.toggle("hidden", s.captchaSolver.provider === "none");
+}
+
+function flashStatus(text: string): void {
+  const el = $("status");
+  el.textContent = text;
+  el.classList.add("show");
+  window.setTimeout(() => el.classList.remove("show"), 1100);
+}
+
+async function persist(): Promise<void> {
+  try {
+    await browser.storage.local.set(readForm() as unknown as Record<string, unknown>);
+    flashStatus("Saved ✓");
+  } catch {
+    flashStatus("Error");
+  }
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -55,33 +69,28 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
   applyToForm(settings);
 
-  // Live conditional visibility
-  $<HTMLInputElement>("timerBoost").addEventListener("change", () => {
-    $("threshold-row").classList.toggle("hidden", !$<HTMLInputElement>("timerBoost").checked);
-  });
-  $<HTMLSelectElement>("captchaProvider").addEventListener("change", () => {
-    $("apikey-row").classList.toggle(
-      "hidden",
-      $<HTMLSelectElement>("captchaProvider").value === "none",
-    );
-  });
+  // Auto-apply: persist on any change (no Save button). Text inputs are debounced
+  // so we don't write storage on every keystroke. Settings take effect on the next
+  // page load; the Reload button force-applies them to the current tab.
+  let saveTimer: ReturnType<typeof setTimeout> | undefined;
+  const controls = document.querySelectorAll<HTMLInputElement | HTMLSelectElement>("input, select");
+  for (const control of controls) {
+    const isText =
+      control instanceof HTMLInputElement &&
+      (control.type === "number" || control.type === "password" || control.type === "text");
 
-  $("saveBtn").addEventListener("click", async () => {
-    const btn = $<HTMLButtonElement>("saveBtn");
-    btn.disabled = true;
-    btn.textContent = "Saving…";
-    try {
-      await browser.storage.local.set(readForm() as unknown as Record<string, unknown>);
-      btn.textContent = "Saved!";
-      setTimeout(() => {
-        btn.textContent = "Save";
-        btn.disabled = false;
-      }, 1200);
-    } catch {
-      btn.textContent = "Error";
-      btn.disabled = false;
+    control.addEventListener("change", () => {
+      syncConditional(readForm());
+      void persist();
+    });
+
+    if (isText) {
+      control.addEventListener("input", () => {
+        window.clearTimeout(saveTimer);
+        saveTimer = window.setTimeout(() => void persist(), 300);
+      });
     }
-  });
+  }
 
   $("reloadBtn").addEventListener("click", async () => {
     const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
