@@ -151,6 +151,12 @@ describe("host matching regression", () => {
     ["surl.gd", "/", "surl"],
     ["tii.la", "/", "tii-la-family"],
     ["iir.li", "/", "tii-la-family"],
+    ["shrinkme.click", "/", "shrinkme-captcha"],
+    ["paid4link.com", "/", "link-view-captcha-family"],
+    ["oii.io", "/", "link-view-captcha-family"],
+    ["tlin.me", "/", "link-view-captcha-family"],
+    ["oke.io", "/", "link-view-captcha-family"],
+    ["pahe.plus", "/", "link-view-captcha-family"],
     // wpsafe
     ["admediaflex.com", "/", "wpsafe-onclick"],
     ["7misr4day.com", "/", "wpsafe-href"],
