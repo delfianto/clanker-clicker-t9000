@@ -1,52 +1,30 @@
 import type { Rule } from "../../types/rules";
+import { hosts } from "./builders";
 
 // The wpsafelink WordPress plugin is used by many Indonesian/South-Asian blogs.
 // Two DOM patterns appear across ~20+ domains.
 
-const ONCLICK_SITES =
-  [
-    "admediaflex",
-    "aduzz",
-    "baristakesehatan",
-    "bloggingos",
-    "cdrab",
-    "cryptoinsiderhub",
-    "financekita",
-    "financenube",
-    "jobydt",
-    "merekrut",
-    "mixrootmods",
-    "omnexa",
-    "pastescript",
-    "trimorspacks",
-    "tutorialsaya",
-  ]
-    .map((d) => `${d}\\.com`)
-    .join("|") + "|deltabtc\\.xyz|gadifeed\\.in";
-
-const HREF_SITES =
-  [
-    "7misr4day",
-    "almontsf",
-    "amanguides",
-    "dlgamingvn",
-    "fitmusclematrix",
-    "g34new",
-    "michaelemad",
-    "phimsubmoi",
-    "v34down",
-  ]
-    .map((d) => `${d}\\.com`)
-    .join("|") + "|(nashib|timbertales)\\.xyz";
-
-// Pattern A: onclick attribute contains window.open('URL', ...)
-// Handles both single and double quote variants in extractPattern
+// onclick attribute contains window.open('URL', ...) — handles both quote styles.
 const ONCLICK_PATTERN = "window\\.open\\(['\"]([^'\"]+)['\"]";
 
 export const wpsafeRules: Rule[] = [
   {
     id: "wpsafe-onclick",
-    match: ONCLICK_SITES,
+    match: hosts(
+      "admediaflex.com",
+      "aduzz.com",
+      "baristakesehatan.com",
+      "bloggingos.com",
+      "cdrab.com",
+      "cryptoinsiderhub.com",
+      "financekita.com",
+      "merekrut.com",
+      "mixrootmods.com",
+      "omnexa.com",
+      "pastescript.com",
+      "tutorialsaya.com",
+      "deltabtc.xyz",
+    ),
     runAt: "loaded",
     actions: [
       {
@@ -64,7 +42,16 @@ export const wpsafeRules: Rule[] = [
   },
   {
     id: "wpsafe-href",
-    match: HREF_SITES,
+    match: hosts(
+      "7misr4day.com",
+      "almontsf.com",
+      "amanguides.com",
+      "dlgamingvn.com",
+      "fitmusclematrix.com",
+      "g34new.com",
+      "michaelemad.com",
+      "phimsubmoi.com",
+    ),
     runAt: "loaded",
     actions: [
       {
@@ -81,24 +68,20 @@ export const wpsafeRules: Rule[] = [
   },
   {
     id: "wpsafe-window-open-onclick",
-    match:
-      [
-        "admediaflex",
-        "cdrab",
-        "financekita",
-        "foodxor",
-        "gkvstudy",
-        "indobo",
-        "jobydt",
-        "mealcold",
-        "mkcgticket",
-        "mobilebajar",
-        "pdfvale",
-        "techtunesbabu",
-        "thepragatishilclasses",
-      ]
-        .map((d) => `${d}\\.com`)
-        .join("|") + "|gadifeed\\.in|skyfreecoins\\.top|vertohub\\.space",
+    match: hosts(
+      "admediaflex.com",
+      "cdrab.com",
+      "financekita.com",
+      "gkvstudy.com",
+      "indobo.com",
+      "mealcold.com",
+      "mkcgticket.com",
+      "mobilebajar.com",
+      "pdfvale.com",
+      "techtunesbabu.com",
+      "skyfreecoins.top",
+      "vertohub.space",
+    ),
     runAt: "loaded",
     actions: [
       {

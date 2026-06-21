@@ -1,4 +1,13 @@
 import type { Rule } from "../../types/rules";
+import {
+  clickAfter,
+  exact,
+  formSubmitThenClick,
+  hosts,
+  paramRedirect,
+  redirectHref,
+  waitRedirect,
+} from "./builders";
 
 export const shortlinkRules: Rule[] = [
   // ─── URL param extraction (run at document_start, no DOM needed) ───────────
@@ -16,18 +25,9 @@ export const shortlinkRules: Rule[] = [
     runAt: "start",
     actions: [{ type: "redirect-from-param", param: "u", decode: "uri" }],
   },
-  {
-    id: "render-state-link",
-    match: "^render-state\\.to$",
-    runAt: "start",
-    actions: [{ type: "redirect-from-param", param: "link", decode: "uri" }],
-  },
-  {
-    id: "telegram-url",
-    match: "^t\\.me$",
-    runAt: "start",
-    actions: [{ type: "redirect-from-param", param: "url", decode: "uri" }],
-  },
+  paramRedirect("render-state.to", "link", "uri"),
+  paramRedirect("t.me", "url", "uri"),
+  paramRedirect("maloma3arbi.blogspot.com", "link"), // ?link=<plain url>, no decode
   {
     id: "tiktok-target",
     match: "(^|\\.)tiktok\\.com$",
@@ -44,48 +44,38 @@ export const shortlinkRules: Rule[] = [
   },
 
   // Base64-encoded URL params
-  {
-    id: "adtival-shortid-b64",
-    match: "^adtival\\.network$",
-    runAt: "start",
-    actions: [{ type: "redirect-from-param", param: "shortid", decode: "base64" }],
-  },
+  paramRedirect("adtival.network", "shortid", "base64"),
   {
     id: "comohoy-url-b64",
-    match: "^comohoy\\.com$",
+    match: exact("comohoy.com"),
     pathMatch: "^/view/out\\.html$",
     runAt: "start",
     actions: [{ type: "redirect-from-param", param: "url", decode: "base64" }],
   },
   {
     id: "kongutoday-safe-b64",
-    match: "(hipsonyc|kongutoday|proappapk)\\.com$",
+    match: hosts("hipsonyc.com", "kongutoday.com"),
     runAt: "start",
     actions: [{ type: "redirect-from-param", param: "safe", decode: "base64" }],
   },
-  {
-    id: "sfl-gl-b64",
-    match: "^sfl\\.gl$",
-    runAt: "start",
-    actions: [{ type: "redirect-from-param", param: "u", decode: "base64" }],
-  },
+  paramRedirect("sfl.gl", "u", "base64"),
   {
     id: "adtival-safe-b64",
-    match: "^sfl\\.gl$",
+    match: exact("sfl.gl"),
     pathMatch: "^/r/",
     runAt: "start",
     actions: [{ type: "redirect-from-param", param: "safe", decode: "base64" }],
   },
   {
     id: "sharetext-url-b64",
-    match: "^sharetext\\.me$",
+    match: exact("sharetext.me"),
     pathMatch: "^/redirect",
     runAt: "start",
     actions: [{ type: "redirect-from-param", param: "url", decode: "base64" }],
   },
   {
     id: "triggeredplay-hash-b64",
-    match: "^triggeredplay\\.com$",
+    match: exact("triggeredplay.com"),
     runAt: "start",
     actions: [{ type: "redirect-from-param", param: "url", decode: "base64", hashParams: true }],
   },
@@ -93,28 +83,28 @@ export const shortlinkRules: Rule[] = [
   // Path-based extraction
   {
     id: "4fnet-path-b64",
-    match: "^4fnet\\.org$",
+    match: exact("4fnet.org"),
     pathMatch: "^/goto",
     runAt: "start",
     actions: [{ type: "redirect-from-path", pattern: "/([^/]+)$", decode: "base64" }],
   },
   {
     id: "apkw-path-b64",
-    match: "^apkw\\.ru$",
+    match: exact("apkw.ru"),
     pathMatch: "^/away",
     runAt: "start",
     actions: [{ type: "redirect-from-path", pattern: "/([^/]+)$", decode: "base64" }],
   },
   {
     id: "programasvirtualespc-b64",
-    match: "^programasvirtualespc\\.net$",
+    match: exact("programasvirtualespc.net"),
     pathMatch: "^/out/",
     runAt: "start",
     actions: [{ type: "redirect-from-path", pattern: "\\?(.+)$", decode: "base64" }],
   },
   {
     id: "yitarx-path-b64x3",
-    match: "^yitarx\\.com$",
+    match: exact("yitarx.com"),
     pathMatch: "^/enlace/",
     runAt: "start",
     actions: [{ type: "redirect-from-path", pattern: "#!(.+)$", decode: "base64x3" }],
@@ -122,110 +112,52 @@ export const shortlinkRules: Rule[] = [
 
   // ─── Click / redirect automation (run after DOM loads) ────────────────────
 
-  {
-    id: "8tm-net",
-    match: "^8tm\\.net$",
-    runAt: "loaded",
-    actions: [
-      {
-        type: "wait-element",
-        selector: "a.btn.btn-secondary.btn-block.redirect",
-        steps: [{ type: "redirect-from-href", selector: "a.btn.btn-secondary.btn-block.redirect" }],
-      },
-    ],
-  },
-  {
-    id: "adfoc-skip",
-    match: "^adfoc\\.us$",
-    runAt: "loaded",
-    actions: [{ type: "redirect-from-href", selector: ".skip" }],
-  },
-  {
-    id: "cpmlink",
-    match: "^cpmlink\\.net$",
-    runAt: "loaded",
-    actions: [
-      {
-        type: "wait-element",
-        selector: "a#btn-main.btn.btn-warning.btn-lg",
-        steps: [{ type: "redirect-from-href", selector: "a#btn-main.btn.btn-warning.btn-lg" }],
-      },
-    ],
-  },
-  {
-    id: "keeplinks",
-    match: "^keeplinks\\.org$",
-    runAt: "loaded",
-    actions: [{ type: "click", selector: "#btnchange", delay: 2000 }],
-  },
-  {
-    id: "lanza-me",
-    match: "^lanza\\.me$",
-    runAt: "loaded",
-    actions: [
-      {
-        type: "wait-element",
-        selector: "a#botonGo",
-        steps: [{ type: "redirect-from-href", selector: "a#botonGo" }],
-      },
-    ],
-  },
-  {
-    id: "linksly",
-    match: "^linksly\\.co$",
-    runAt: "loaded",
-    actions: [
-      {
-        type: "wait-element",
-        selector: "div.col-md-12 a",
-        steps: [{ type: "redirect-from-href", selector: "div.col-md-12 a" }],
-      },
-    ],
-  },
-  {
-    id: "linkspy-skip",
-    match: "^linkspy\\.cc$",
-    runAt: "loaded",
-    actions: [{ type: "redirect-from-href", selector: ".skipButton" }],
-  },
-  {
-    id: "mohtawaa",
-    match: "^mohtawaa\\.com$",
-    runAt: "loaded",
-    actions: [
-      {
-        type: "wait-element",
-        selector: "a.btn.btn-success.btn-lg.get-link.enabled",
-        steps: [
-          { type: "redirect-from-href", selector: "a.btn.btn-success.btn-lg.get-link.enabled" },
-        ],
-      },
-    ],
-  },
+  waitRedirect("8tm.net", "a.btn.btn-secondary.btn-block.redirect"),
+  redirectHref("adfoc.us", ".skip"),
+  waitRedirect("cpmlink.net", "a#btn-main.btn.btn-warning.btn-lg"),
+  clickAfter("keeplinks.org", "#btnchange", 2000),
+  waitRedirect("lanza.me", "a#botonGo"),
+  waitRedirect("linksly.co", "div.col-md-12 a"),
+  redirectHref("linkspy.cc", ".skipButton"),
+  waitRedirect("mohtawaa.com", "a.btn.btn-success.btn-lg.get-link.enabled"),
   {
     id: "multiup-io",
-    match: "^multiup\\.io$",
+    match: exact("multiup.io"),
     pathMatch: "^/download/",
     runAt: "start",
-    actions: [{ type: "custom", handler: "multiup-redirect" }],
+    actions: [{ type: "rewrite-url", find: "download/", replace: "en/mirror/" }],
   },
-  // ouo handled entirely by custom handler (checks ?s= param first, then waits for button)
+  // ouo: post-captcha page carries ?s=<destination>; otherwise wait for the
+  // continue button and click it to trigger the form POST.
   {
     id: "ouo",
     match: "^ouo\\.(io|press)$",
     runAt: "loaded",
-    actions: [{ type: "custom", handler: "ouo" }],
+    actions: [
+      {
+        type: "run",
+        run: async ({ params, navigateTo, waitForElement }) => {
+          const s = params.get("s");
+          if (s) {
+            navigateTo(s.startsWith("http") ? s : "https://" + s);
+            return;
+          }
+          const btn = await waitForElement("button#btn-main");
+          (btn as HTMLElement).click();
+        },
+      },
+    ],
   },
   {
     id: "paycut-path-strip",
-    match: "^paycut\\.pro$",
+    match: exact("paycut.pro"),
     pathMatch: "^/ad/",
     runAt: "start",
-    actions: [{ type: "custom", handler: "paycut-strip" }],
+    actions: [{ type: "rewrite-url", find: "/ad/", replace: "/" }],
   },
   {
-    id: "surl-li",
-    match: "^surl\\.(li|gd)$",
+    id: "surl",
+    match: hosts("surl.li", "surl.gd"),
     runAt: "loaded",
     actions: [
       {
@@ -235,67 +167,36 @@ export const shortlinkRules: Rule[] = [
       },
     ],
   },
-  {
-    id: "the2-link",
-    match: "^the2\\.link$",
-    runAt: "loaded",
-    actions: [{ type: "click", selector: "#get-link-btn", delay: 3000 }],
-  },
-
   // ─── Form submit patterns (cover many sites each) ─────────────────────────
 
-  {
-    id: "form-tp-pattern",
-    match:
-      [
-        "aceforce2apk",
-        "djssmusic",
-        "ez4mods",
-        "fastcars1",
-        "game5s",
-        "jansamparks",
-        "keedabankingnews",
-        "sayphotobooth",
-        "sharedp",
-        "superheromaniac",
-        "visastepguide",
-        "zygina",
-      ]
-        .map((d) => `${d}\\.com`)
-        .join("|") + "|btcon\\.online|topshare\\.in",
-    runAt: "loaded",
-    actions: [
-      { type: "submit", selector: "form[name='tp']", delay: 3000 },
-      { type: "click", selector: "#btn6", delay: 4000 },
-    ],
-  },
+  formSubmitThenClick(
+    "form-tp-pattern",
+    hosts(
+      "djssmusic.com",
+      "fastcars1.com",
+      "game5s.com",
+      "jansamparks.com",
+      "sayphotobooth.com",
+      "sharedp.com",
+      "superheromaniac.com",
+      "visastepguide.com",
+      "topshare.in",
+    ),
+    "tp",
+  ),
   {
     id: "form-dsb-captcha",
-    match: "(askpaccosi|cryptomonitor)\\.com",
+    match: hosts("askpaccosi.com", "cryptomonitor.com"),
     runAt: "loaded",
     actions: [{ type: "wait-captcha", steps: [{ type: "submit", selector: "form[name='dsb']" }] }],
   },
-  {
-    id: "form-rtg-pattern",
-    match: [
-      "blockjump\\.in",
-      "carjankaari\\.com",
-      "jobmatric\\.com",
-      "techsl\\.online",
-      "vahansamachar\\.com",
-    ].join("|"),
-    runAt: "loaded",
-    actions: [
-      { type: "submit", selector: "form[name='rtg']", delay: 3000 },
-      { type: "click", selector: "#btn6", delay: 4000 },
-    ],
-  },
+  formSubmitThenClick("form-rtg-pattern", hosts("carjankaari.com", "vahansamachar.com"), "rtg"),
 
   // ─── Captcha-gated click rules ─────────────────────────────────────────────
 
   {
     id: "fc-lc-family",
-    match: "^(fc-lc|thotpacks)\\.xyz|^fc\\.lc$",
+    match: hosts("fc-lc.xyz", "thotpacks.xyz", "fc.lc"),
     runAt: "loaded",
     actions: [
       { type: "wait-captcha", steps: [{ type: "submit", selector: "#link-view" }] },
@@ -305,7 +206,7 @@ export const shortlinkRules: Rule[] = [
   },
   {
     id: "playnano",
-    match: "^playnano\\.online$",
+    match: exact("playnano.online"),
     runAt: "loaded",
     actions: [
       { type: "click", selector: "#watch-link", delay: 2000 },
@@ -314,32 +215,28 @@ export const shortlinkRules: Rule[] = [
   },
   {
     id: "playpaste-captcha",
-    match: "^playpaste\\.com$",
+    match: exact("playpaste.com"),
     runAt: "loaded",
     actions: [{ type: "wait-captcha", steps: [{ type: "click", selector: "button.btn" }] }],
   },
   {
     id: "shortlink-form-continue",
-    match: [
-      "10short\\.com",
-      "4hi\\.in",
-      "animerigel\\.com",
-      "encurt4\\.com",
-      "encurtacash\\.com",
-      "faucetsatoshi\\.site",
-      "fbol\\.top",
-      "kshlink\\.com",
-      "kut\\.li",
-      "oii\\.si",
-      "passivecryptos\\.xyz",
-      "payskip\\.org",
-      "rslinks\\.fun",
-      "shortie\\.sbs",
-      "shortlinkdk\\.com",
-      "tfly\\.link",
-      "urlcashdk\\.xyz",
-      "zippynest\\.online",
-    ].join("|"),
+    match: hosts(
+      "10short.com",
+      "4hi.in",
+      "animerigel.com",
+      "encurt4.com",
+      "encurtacash.com",
+      "fbol.top",
+      "kshlink.com",
+      "kut.li",
+      "oii.si",
+      "passivecryptos.xyz",
+      "payskip.org",
+      "shortlinkdk.com",
+      "tfly.link",
+      "urlcashdk.xyz",
+    ),
     runAt: "loaded",
     actions: [
       { type: "submit", selector: "#form-continue", delay: 2000 },

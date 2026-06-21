@@ -1,0 +1,4 @@
+[test]
+# Register a happy-dom window/document/location for every test file so the
+# DOM-dependent engine code (actions, wait, ctx, features) can run under `bun test`.
+preload = ["./test/setup.ts"]

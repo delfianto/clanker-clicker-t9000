@@ -149,7 +149,9 @@ for (let i = 0; i < ALL_DOMAINS.length; i += CONCURRENCY) {
   const batch = ALL_DOMAINS.slice(i, i + CONCURRENCY);
   const batchResults = await Promise.all(batch.map(checkDomain));
   results.push(...batchResults);
-  process.stdout.write(`  [${Math.min(i + CONCURRENCY, ALL_DOMAINS.length)}/${ALL_DOMAINS.length}]\r`);
+  process.stdout.write(
+    `  [${Math.min(i + CONCURRENCY, ALL_DOMAINS.length)}/${ALL_DOMAINS.length}]\r`,
+  );
 }
 
 // ── Report ────────────────────────────────────────────────────────────────────
@@ -181,17 +183,23 @@ if (byStatus.alive.length) {
 }
 
 if (byStatus.cloudflare.length) {
-  console.log(`\n${C.yellow}⚡ Cloudflare/bot-blocked — likely alive (${byStatus.cloudflare.length})${C.reset}`);
+  console.log(
+    `\n${C.yellow}⚡ Cloudflare/bot-blocked — likely alive (${byStatus.cloudflare.length})${C.reset}`,
+  );
   for (const r of byStatus.cloudflare) console.log(`  ${r.domain} [${r.code}]`);
 }
 
 if (byStatus.broken.length) {
-  console.log(`\n${C.yellow}⚠ Server errors 5xx — check manually (${byStatus.broken.length})${C.reset}`);
+  console.log(
+    `\n${C.yellow}⚠ Server errors 5xx — check manually (${byStatus.broken.length})${C.reset}`,
+  );
   for (const r of byStatus.broken) console.log(`  ${r.domain} [${r.code}]`);
 }
 
 if (byStatus["dead-http"].length) {
-  console.log(`\n${C.red}✗ Dead — DNS resolves but HTTP fails (${byStatus["dead-http"].length})${C.reset}`);
+  console.log(
+    `\n${C.red}✗ Dead — DNS resolves but HTTP fails (${byStatus["dead-http"].length})${C.reset}`,
+  );
   for (const r of byStatus["dead-http"])
     console.log(`  ${r.domain}${r.detail ? ` (${r.detail})` : r.code ? ` [${r.code}]` : ""}`);
 }
