@@ -29,9 +29,37 @@ bun run dev             # watch mode (Chrome)
 bun run check           # vp check — fmt + oxlint + tsc (run before committing)
 bun run lint            # vp lint src/ — oxlint only
 bun run fmt             # vp fmt src/ — oxfmt format
+bun run test            # bun test — unit suite (run with check before merging)
+bun run test:coverage   # bun test --coverage
 ```
 
 Load the extension: Chrome → `chrome://extensions` → Developer mode → Load unpacked → `build/chrome/`
+
+---
+
+## Testing
+
+Unit tests live in `test/` (mirrors `src/`), run by **`bun test`**. A `bunfig.toml`
+preloads `test/setup.ts`, which registers **happy-dom** so DOM-dependent engine code
+(actions, wait, ctx, features) runs headless. Pre-merge gate: `bun run check && bun run test`.
+
+What's covered (≈80% lines; declarative core is ~100%):
+
+- **Pure logic** — `decode`, builders (`exact`/`hosts`/…), `matchRule` + priority sort,
+  `activeFeatures` gating, `DEFAULT_SETTINGS`.
+- **Rule-set invariants** (`test/rules/ruleset.test.ts`) — unique ids, regexes compile,
+  every action well-formed, `requiresFeature` valid, priority-sorted, **plus a host→rule-id
+  matching table**. This is the guard that makes rule edits safe; add a case when you add a host.
+- **DOM-backed** — every `RuleAction` executor (via happy-dom, spying `location.assign`),
+  `waitForElement`, `makeCtx`, `runRule` (incl. the Cloudflare-interstitial guard), and the
+  cleanly-reversible features (popup-blocker, timers, adblock, visibility).
+
+Deliberately **not** unit-tested (global-prototype patching / polling — verify by live
+smoke-test): `features/trust.ts`, `features/cloudflare.ts`, `engine/captcha.ts`.
+
+Notes: tests import from `bun:test` explicitly (no globals). `test/` is not in the tsc
+`include` (keeps bun's test types out of the extension typecheck); it's still fmt+lint-checked
+by `vp check`.
 
 ---
 
