@@ -127,7 +127,7 @@ describe("host matching regression", () => {
     ["other.blogspot.com", "/", undefined],
     ["t.me", "/", "t.me-url"],
     ["adtival.network", "/", "adtival.network-shortid"],
-    ["sfl.gl", "/", "sfl.gl-u"],
+    ["sfl.gl", "/", undefined], // rebranded → linku.to (302); rule removed
     ["adfoc.us", "/", "adfoc.us"],
     ["linkspy.cc", "/", "linkspy.cc"],
     ["keeplinks.org", "/", "keeplinks.org"],

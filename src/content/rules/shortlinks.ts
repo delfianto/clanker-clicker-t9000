@@ -58,14 +58,9 @@ export const shortlinkRules: Rule[] = [
     runAt: "start",
     actions: [{ type: "redirect-from-param", param: "safe", decode: "base64" }],
   },
-  paramRedirect("sfl.gl", "u", "base64"),
-  {
-    id: "adtival-safe-b64",
-    match: exact("sfl.gl"),
-    pathMatch: "^/r/",
-    runAt: "start",
-    actions: [{ type: "redirect-from-param", param: "safe", decode: "base64" }],
-  },
+  // sfl.gl removed 2026-06-22: rebranded — its apex now 302s to linku.to (a
+  // Cloudflare-fronted JS shortener with a different, unverified mechanism), so
+  // our content script never runs on sfl.gl. Needs a real linku.to link to re-add.
   {
     id: "sharetext-url-b64",
     match: exact("sharetext.me"),
