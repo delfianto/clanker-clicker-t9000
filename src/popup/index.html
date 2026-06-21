@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clanker Clicker T9000</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <img src="../icons/icon-48.png" alt="" class="logo" />
+    <div class="title-block">
+      <h1>Clanker Clicker</h1>
+      <span class="version">T9000</span>
+    </div>
+    <label class="master-toggle" title="Enable / disable extension">
+      <input type="checkbox" id="enabled" />
+      <span class="slider"></span>
+    </label>
+  </header>
+
+  <main id="settings-panel">
+    <section>
+      <h2>Features</h2>
+
+      <label class="row">
+        <span>Timer Boost</span>
+        <input type="checkbox" id="timerBoost" />
+      </label>
+      <label class="row indent sub-row" id="threshold-row">
+        <span>Threshold (ms)</span>
+        <input type="number" id="timerThreshold" min="100" max="10000" step="100" />
+      </label>
+
+      <label class="row">
+        <span>Popup Blocker</span>
+        <input type="checkbox" id="popupBlocker" />
+      </label>
+
+      <label class="row">
+        <span>Anti-Adblock Remover</span>
+        <input type="checkbox" id="antiAdblock" />
+      </label>
+
+      <label class="row">
+        <span>Cloudflare Turnstile Bypass</span>
+        <input type="checkbox" id="cloudflareTurnstile" />
+      </label>
+
+      <label class="row">
+        <span>Auto Download</span>
+        <input type="checkbox" id="autoDL" />
+      </label>
+    </section>
+
+    <section>
+      <h2>Captcha Solver</h2>
+      <label class="row">
+        <span>Provider</span>
+        <select id="captchaProvider">
+          <option value="none">None (disabled)</option>
+          <option value="nopecha">NopeCHA</option>
+        </select>
+      </label>
+      <label class="row" id="apikey-row">
+        <span>API Key</span>
+        <input type="password" id="captchaApiKey" placeholder="nopecha_…" autocomplete="off" />
+      </label>
+    </section>
+
+    <div class="actions">
+      <button id="saveBtn" class="btn primary">Save</button>
+      <button id="reloadBtn" class="btn">Reload Tab</button>
+    </div>
+  </main>
+
+  <footer>
+    <a href="https://github.com/delfianto/clanker-clicker-t9000" target="_blank" rel="noopener">GitHub</a>
+  </footer>
+
+  <script src="index.js"></script>
+</body>
+</html>
