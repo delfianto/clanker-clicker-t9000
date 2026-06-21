@@ -2,3 +2,4 @@ node_modules/
 build/
 *.xpi
 reference/
+.claude/settings.local.json
