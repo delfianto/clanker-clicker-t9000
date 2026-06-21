@@ -1,20 +1,20 @@
 {
   "permissions": {
     "allow": [
-      "Bash(bun run *)",
-      "Bash(bun pm *)",
       "Bash(bun install*)",
-      "Bash(vp *)",
-      "Bash(git status*)",
-      "Bash(git diff*)",
-      "Bash(git log*)",
+      "Bash(bun pm *)",
+      "Bash(bun run *)",
+      "Bash(find . *)",
       "Bash(git add *)",
       "Bash(git commit*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
       "Bash(git push*)",
       "Bash(git show*)",
-      "Bash(find . *)",
+      "Bash(git status*)",
       "Bash(grep *)",
-      "Bash(ls *)"
+      "Bash(ls *)",
+      "Bash(vp *)"
     ],
     "deny": []
   },
