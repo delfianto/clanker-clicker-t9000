@@ -1,5 +1,4 @@
 import type { RuleAction } from '../../types/rules';
-import { qs } from './dom';
 import { waitForElement, waitForVisible, sleep } from './wait';
 import { waitForCaptcha } from './captcha';
 import { navigateTo, metaRedirect, extractFromParam, extractFromPath, extractFromOnclick } from './redirect';
@@ -47,21 +46,21 @@ async function executeAction(
       const el = await waitForElement(action.selector, signal);
       if (signal.aborted) return;
       void el;
-      await runActions(action.then, signal, registry);
+      await runActions(action.steps, signal, registry);
       break;
     }
 
     case 'wait-captcha': {
       await waitForCaptcha(signal);
       if (signal.aborted) return;
-      await runActions(action.then, signal, registry);
+      await runActions(action.steps, signal, registry);
       break;
     }
 
     case 'wait-visibility': {
       await waitForVisible(action.selector, signal);
       if (signal.aborted) return;
-      await runActions(action.then, signal, registry);
+      await runActions(action.steps, signal, registry);
       break;
     }
 

@@ -15,16 +15,6 @@ export type CCConfig = {
   timestamp: number;
 };
 
-export const DEFAULT_SETTINGS: Settings = {
-  enabled: true,
-  timerBoost: { enabled: false, threshold: 1000 },
-  popupBlocker: false,
-  antiAdblock: false,
-  cloudflareTurnstile: true,
-  captchaSolver: { provider: 'none', apiKey: '' },
-  autoDL: false,
-};
-
 declare global {
   interface Window {
     __CC_CONFIG?: CCConfig;

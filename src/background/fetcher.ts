@@ -22,9 +22,9 @@ export async function crossOriginFetch(
     const res = await fetch(url, {
       method,
       headers,
-      body: body ?? undefined,
       credentials: 'omit',
       signal: controller.signal,
+      ...(body != null ? { body } : {}),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.text();

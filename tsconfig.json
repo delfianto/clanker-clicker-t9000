@@ -3,16 +3,15 @@
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "strict": true,
+    "verbatimModuleSyntax": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
-    "lib": ["ES2022", "DOM"],
-    "baseUrl": "src",
-    "paths": {
-      "@types/*": ["types/*"]
-    },
+    "noUncheckedSideEffectImports": true,
+    "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["src/**/*", "scripts/**/*"],
+  "include": ["src/**/*", "vite.config.ts"],
   "exclude": ["build", "node_modules"]
 }
