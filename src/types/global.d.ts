@@ -1,4 +1,4 @@
-export type CaptchaProvider = 'nopecha' | 'none';
+export type CaptchaProvider = "nopecha" | "none";
 
 export type Settings = {
   enabled: boolean;

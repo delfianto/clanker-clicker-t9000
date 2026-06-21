@@ -1,4 +1,4 @@
-import { qs } from './dom';
+import { qs } from "./dom";
 
 const CAPTCHA_POLL_MS = 1_000;
 const CAPTCHA_TIMEOUT_MS = 120_000;
@@ -11,7 +11,7 @@ type CaptchaWindow = Window & {
 
 export function waitForCaptcha(
   signal?: AbortSignal,
-  timeoutMs = CAPTCHA_TIMEOUT_MS
+  timeoutMs = CAPTCHA_TIMEOUT_MS,
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     const start = Date.now();
@@ -19,17 +19,23 @@ export function waitForCaptcha(
 
     function cleanup() {
       clearInterval(timer);
-      signal?.removeEventListener('abort', onAbort);
+      signal?.removeEventListener("abort", onAbort);
     }
 
-    function onAbort() { cleanup(); reject(new DOMException('Aborted', 'AbortError')); }
-    signal?.addEventListener('abort', onAbort, { once: true });
+    function onAbort() {
+      cleanup();
+      reject(new DOMException("Aborted", "AbortError"));
+    }
+    signal?.addEventListener("abort", onAbort, { once: true });
 
     timer = setInterval(() => {
-      if (signal?.aborted) { cleanup(); return; }
+      if (signal?.aborted) {
+        cleanup();
+        return;
+      }
       if (Date.now() - start >= timeoutMs) {
         cleanup();
-        reject(new Error('Captcha timeout'));
+        reject(new Error("Captcha timeout"));
         return;
       }
 
@@ -44,7 +50,7 @@ export function waitForCaptcha(
 function isCaptchaSolved(): boolean {
   const w = window as CaptchaWindow;
 
-  if (qs('.iconcaptcha-modal__body-checkmark')) return true;
+  if (qs(".iconcaptcha-modal__body-checkmark")) return true;
 
   if (qs("iframe[src^='https://newassets.hcaptcha.com']")) {
     const r = w.hcaptcha?.getResponse();

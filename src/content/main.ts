@@ -1,13 +1,13 @@
-import type { CCConfig } from '../types/global';
+import type { CCConfig } from "../types/global";
 
-import { installTimerBoost } from './features/timers';
-import { installVisibilitySpoofing } from './features/visibility';
-import { installTrustProxy } from './features/trust';
-import { installPopupBlocker } from './features/popup-blocker';
-import { installAntiAdblockRemover, DEFAULT_ADBLOCK_PATTERN } from './features/adblock';
-import { installCloudflareTurnstileBypass } from './features/cloudflare';
-import { getAllRules, getRegistry } from './rules/index';
-import { matchRule, runRule } from './engine/dispatcher';
+import { installTimerBoost } from "./features/timers";
+import { installVisibilitySpoofing } from "./features/visibility";
+import { installTrustProxy } from "./features/trust";
+import { installPopupBlocker } from "./features/popup-blocker";
+import { installAntiAdblockRemover, DEFAULT_ADBLOCK_PATTERN } from "./features/adblock";
+import { installCloudflareTurnstileBypass } from "./features/cloudflare";
+import { getAllRules, getRegistry } from "./rules/index";
+import { matchRule, runRule } from "./engine/dispatcher";
 
 (function bootstrap(): void {
   // Config may already be set by isolated.ts scripting injection,
@@ -56,7 +56,7 @@ function run(config: CCConfig | undefined): void {
   }
 
   // Run rule engine
-  const hostname = location.hostname.replace(/^www\./, '');
+  const hostname = location.hostname.replace(/^www\./, "");
   const rules = getAllRules();
   const matched = matchRule(rules, hostname, location.pathname);
   if (!matched) return;

@@ -1,11 +1,11 @@
-import type { Rule } from '../../types/rules';
-import type { CustomHandlerRegistry } from '../engine/actions';
+import type { Rule } from "../../types/rules";
+import type { CustomHandlerRegistry } from "../engine/actions";
 
-import { shortlinkRules } from './shortlinks';
-import { wpsafeRules } from './wpsafe';
-import { downloadRules } from './downloads';
-import { googleRedirectRule, registerGoogleRedirectHandler } from './custom/google-redirect';
-import { registerOuoHandlers } from './custom/ouo';
+import { shortlinkRules } from "./shortlinks";
+import { wpsafeRules } from "./wpsafe";
+import { downloadRules } from "./downloads";
+import { googleRedirectRule, registerGoogleRedirectHandler } from "./custom/google-redirect";
+import { registerOuoHandlers } from "./custom/ouo";
 
 let _allRules: Rule[] | null = null;
 let _registry: CustomHandlerRegistry | null = null;
@@ -13,7 +13,7 @@ let _registry: CustomHandlerRegistry | null = null;
 export function getAllRules(): Rule[] {
   if (!_allRules) {
     _allRules = [
-      googleRedirectRule,   // specific first (has pathMatch)
+      googleRedirectRule, // specific first (has pathMatch)
       ...shortlinkRules,
       ...wpsafeRules,
       ...downloadRules,

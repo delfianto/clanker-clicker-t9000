@@ -1,5 +1,5 @@
-import browser from 'webextension-polyfill';
-import type { Settings, CCConfig } from '../types/global';
+import browser from "webextension-polyfill";
+import type { Settings, CCConfig } from "../types/global";
 
 const DEFAULT_SETTINGS: Settings = {
   enabled: true,
@@ -7,7 +7,7 @@ const DEFAULT_SETTINGS: Settings = {
   popupBlocker: false,
   antiAdblock: false,
   cloudflareTurnstile: true,
-  captchaSolver: { provider: 'none', apiKey: '' },
+  captchaSolver: { provider: "none", apiKey: "" },
   autoDL: false,
 };
 
@@ -30,8 +30,10 @@ async function init(): Promise<void> {
     if (tab?.id != null) {
       await browser.scripting.executeScript({
         target: { tabId: tab.id, allFrames: false },
-        world: 'MAIN' as browser.Scripting.ExecutionWorld,
-        func: (cfg: CCConfig) => { window.__CC_CONFIG = cfg; },
+        world: "MAIN" as browser.Scripting.ExecutionWorld,
+        func: (cfg: CCConfig) => {
+          window.__CC_CONFIG = cfg;
+        },
         args: [config],
       });
     }
@@ -41,22 +43,22 @@ async function init(): Promise<void> {
   }
 
   // Relay messages from MAIN world that need browser API access
-  window.addEventListener('message', (event: MessageEvent) => {
-    if (event.source !== window || event.data?.type !== 'CC_REQUEST') return;
+  window.addEventListener("message", (event: MessageEvent) => {
+    if (event.source !== window || event.data?.type !== "CC_REQUEST") return;
     handleMainWorldRequest(event.data).catch(() => {});
   });
 }
 
 function injectViaScriptTag(config: CCConfig): void {
-  const script = document.createElement('script');
+  const script = document.createElement("script");
   script.textContent = `window.__CC_CONFIG = ${JSON.stringify(config)};`;
   (document.documentElement ?? document.head).appendChild(script);
   script.remove();
 }
 
 interface CCRequest {
-  type: 'CC_REQUEST';
-  action: 'openTab' | 'copyText' | 'fetch';
+  type: "CC_REQUEST";
+  action: "openTab" | "copyText" | "fetch";
   id: string;
   url?: string;
   text?: string;
@@ -67,15 +69,15 @@ async function handleMainWorldRequest(req: CCRequest): Promise<void> {
   let result: unknown;
   try {
     switch (req.action) {
-      case 'openTab':
+      case "openTab":
         if (req.url) await browser.tabs.create({ url: req.url });
         result = { ok: true };
         break;
 
-      case 'fetch':
-        if (!req.url) throw new Error('no url');
+      case "fetch":
+        if (!req.url) throw new Error("no url");
         result = await browser.runtime.sendMessage({
-          type: 'CC_FETCH',
+          type: "CC_FETCH",
           url: req.url,
           method: req.fetchOpts?.method,
           headers: req.fetchOpts?.headers,
@@ -84,12 +86,12 @@ async function handleMainWorldRequest(req: CCRequest): Promise<void> {
         break;
 
       default:
-        result = { error: 'unknown action' };
+        result = { error: "unknown action" };
     }
   } catch (e) {
     result = { error: String(e) };
   }
-  window.postMessage({ type: 'CC_RESPONSE', id: req.id, result }, '*');
+  window.postMessage({ type: "CC_RESPONSE", id: req.id, result }, "*");
 }
 
 init().catch(() => {});

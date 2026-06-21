@@ -6,18 +6,18 @@ export function installAntiAdblockRemover(pattern: RegExp): () => void {
     if (!(node instanceof HTMLScriptElement) && !(node instanceof HTMLIFrameElement)) {
       return false;
     }
-    const src = (node as HTMLScriptElement | HTMLIFrameElement).src ?? '';
-    const text = node instanceof HTMLScriptElement ? (node.textContent ?? '') : '';
+    const src = (node as HTMLScriptElement | HTMLIFrameElement).src ?? "";
+    const text = node instanceof HTMLScriptElement ? (node.textContent ?? "") : "";
     return pattern.test(src) || pattern.test(text);
   }
 
   function scanExisting(): void {
-    document.querySelectorAll('script, iframe').forEach(el => {
+    document.querySelectorAll("script, iframe").forEach((el) => {
       if (shouldBlock(el)) el.remove();
     });
   }
 
-  const observer = new MutationObserver(mutations => {
+  const observer = new MutationObserver((mutations) => {
     for (const { addedNodes } of mutations) {
       for (const node of addedNodes) {
         if (shouldBlock(node)) (node as Element).remove();

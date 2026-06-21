@@ -1,16 +1,17 @@
 {
   "name": "clanker-clicker-t9000",
   "version": "1.0.0",
-  "description": "Clean shortlink bypasser — MV3 browser extension",
   "private": true,
+  "description": "Clean shortlink bypasser — MV3 browser extension",
   "type": "module",
   "scripts": {
-    "build": "vite build",
-    "build:firefox": "BROWSER=firefox vite build",
-    "dev": "vite build --watch",
-    "dev:firefox": "BROWSER=firefox vite build --watch",
-    "typecheck": "tsc --noEmit",
-    "lint": "oxlint src/"
+    "build": "vp build",
+    "build:firefox": "BROWSER=firefox vp build",
+    "dev": "vp build --watch",
+    "dev:firefox": "BROWSER=firefox vp build --watch",
+    "check": "vp check",
+    "lint": "vp lint src/",
+    "fmt": "vp fmt src/"
   },
   "dependencies": {
     "webextension-polyfill": "^0.12.0"
@@ -18,10 +19,9 @@
   "devDependencies": {
     "@types/chrome": "^0.0.268",
     "@types/webextension-polyfill": "^0.12.0",
-    "oxlint": "latest",
     "typescript": "rc",
-    "vite": "^6.0.0",
-    "vite-plugin-web-extension": "latest"
+    "vite-plugin-web-extension": "latest",
+    "vite-plus": "latest"
   },
   "trustedDependencies": [
     "spawn-sync"
