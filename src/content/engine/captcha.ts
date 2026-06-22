@@ -51,14 +51,14 @@ function isCaptchaSolved(): boolean {
   const w = window as CaptchaWindow;
 
   if (qs(".iconcaptcha-modal__body-checkmark")) {
-    console.debug("[CC] captcha solved: iconcaptcha");
+    console.log("[CC] captcha solved: iconcaptcha");
     return true;
   }
 
   if (qs("iframe[src^='https://newassets.hcaptcha.com']")) {
     const r = w.hcaptcha?.getResponse();
     if (r && r.length > 0) {
-      console.debug("[CC] captcha solved: hcaptcha");
+      console.log("[CC] captcha solved: hcaptcha");
       return true;
     }
   }
@@ -66,7 +66,7 @@ function isCaptchaSolved(): boolean {
   if (qs("input[name='cf-turnstile-response']")) {
     const r = w.turnstile?.getResponse();
     if (r && r.length > 0) {
-      console.debug("[CC] captcha solved: turnstile");
+      console.log("[CC] captcha solved: turnstile");
       return true;
     }
   }
@@ -78,7 +78,7 @@ function isCaptchaSolved(): boolean {
   if (w.grecaptcha && typeof w.grecaptcha.getResponse === "function") {
     const r = w.grecaptcha.getResponse();
     if (r && r.length > 0) {
-      console.debug("[CC] captcha solved: grecaptcha token=" + r.slice(0, 20) + "…");
+      console.log("[CC] captcha solved: grecaptcha token=" + r.slice(0, 20) + "…");
       return true;
     }
   }

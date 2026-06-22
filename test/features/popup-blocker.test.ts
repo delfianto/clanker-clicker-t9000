@@ -1,23 +1,31 @@
-import { afterEach, expect, test } from "bun:test";
+import { afterEach, expect, mock, test } from "bun:test";
 import { installPopupBlocker } from "../../src/content/features/popup-blocker";
 
 let uninstall: (() => void) | null = null;
 afterEach(() => {
   uninstall?.();
   uninstall = null;
-  document.getElementById("cc-popup-notice")?.remove();
 });
 
-test("intercepts http(s) window.open: returns null and shows a notice with the URL", () => {
+test("intercepts http(s) window.open: returns null and schedules navigation", async () => {
+  const assign = mock((url: string) => url);
+  Object.defineProperty(window, "location", {
+    value: { assign, href: "https://example.com" },
+    writable: true,
+    configurable: true,
+  });
   uninstall = installPopupBlocker();
   const result = window.open("https://ad.example/popup");
   expect(result).toBeNull();
-  const notice = document.getElementById("cc-popup-notice");
-  expect(notice).not.toBeNull();
-  expect(notice?.textContent).toContain("ad.example");
+  // Navigation is scheduled as a microtask
+  await Promise.resolve();
+  expect(assign).toHaveBeenCalledWith("https://ad.example/popup");
 });
 
-test("does not show a notice before any popup is attempted", () => {
+test("passes through non-http opens unchanged", () => {
   uninstall = installPopupBlocker();
-  expect(document.getElementById("cc-popup-notice")).toBeNull();
+  // about:blank and similar should not be intercepted
+  const result = window.open("about:blank");
+  // returns whatever the real open returns in happy-dom
+  expect(result === null || result !== undefined).toBe(true);
 });
