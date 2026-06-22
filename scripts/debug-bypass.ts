@@ -13,13 +13,27 @@
 
 import { chromium } from "playwright";
 import type { Page } from "playwright";
-import { mkdtempSync } from "fs";
+import { mkdtempSync, cpSync, existsSync } from "fs";
 import { tmpdir } from "os";
 import { resolve } from "path";
+import { execSync } from "child_process";
 
 const startUrl = process.argv[2] ?? "https://shrinkme.click/p6D5dD";
 const extPath = resolve("./build/chrome");
-const userDataDir = mkdtempSync(`${tmpdir()}/cc-debug-`);
+
+// Chrome refuses CDP on its real default profile dir, so we copy Profile2 into
+// a temp dir. Chrome can stay open; this copy gets the session cookies/storage
+// without touching the real profile or holding its lock.
+const chromeDir = `${process.env["HOME"]}/.config/google-chrome`;
+const profileName = "Profile2";
+const userDataDir = mkdtempSync(`${tmpdir()}/cc-profile-`);
+const localState = `${chromeDir}/Local State`;
+if (existsSync(localState)) cpSync(localState, `${userDataDir}/Local State`);
+cpSync(`${chromeDir}/${profileName}`, `${userDataDir}/${profileName}`, { recursive: true });
+execSync(
+  `rm -f "${userDataDir}/${profileName}/Lock" "${userDataDir}/${profileName}/SingletonLock"`,
+);
+
 let hopCount = 0;
 
 console.log(`\n[debug] start : ${startUrl}`);
@@ -29,7 +43,12 @@ console.log(`\nSolve captchas manually in the browser window. Ctrl+C to quit.\n`
 const ctx = await chromium.launchPersistentContext(userDataDir, {
   headless: false,
   executablePath: "/usr/bin/google-chrome-stable",
-  args: [`--disable-extensions-except=${extPath}`, `--load-extension=${extPath}`, "--no-sandbox"],
+  args: [
+    `--disable-extensions-except=${extPath}`,
+    `--load-extension=${extPath}`,
+    "--profile-directory=Profile2",
+    "--no-sandbox",
+  ],
 });
 
 type CaptchaState = {
