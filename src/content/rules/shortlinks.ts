@@ -107,6 +107,14 @@ export const shortlinkRules: Rule[] = [
 
   // ─── Click / redirect automation (run after DOM loads) ────────────────────
 
+  // mrproblogger: hidden form#go-link with CSRF + ad_form_data already populated;
+  // page has a countdown before auto-submitting — submit immediately to skip it.
+  {
+    id: "mrproblogger",
+    match: exact("en.mrproblogger.com"),
+    runAt: "loaded",
+    actions: [{ type: "submit", selector: "form#go-link", delay: 1000 }],
+  },
   waitRedirect("8tm.net", "a.btn.btn-secondary.btn-block.redirect"),
   redirectHref("adfoc.us", ".skip"),
   waitRedirect("cpmlink.net", "a#btn-main.btn.btn-warning.btn-lg"),
