@@ -120,6 +120,7 @@ describe("host matching regression", () => {
   // [hostname, pathname, expected rule id | undefined]
   const cases: [string, string, string | undefined][] = [
     // builder-generated
+    ["en.mrproblogger.com", "/p6D5dD", "mrproblogger"],
     ["8tm.net", "/", "8tm.net"],
     ["www.8tm.net", "/", "8tm.net"],
     ["render-state.to", "/", "render-state.to-link"],
