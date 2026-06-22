@@ -108,12 +108,13 @@ export const shortlinkRules: Rule[] = [
   // ─── Click / redirect automation (run after DOM loads) ────────────────────
 
   // en.mrproblogger.com is a white-label ShrinkMe instance: 12-second countdown,
-  // then #go-submit becomes visible. Click it; the page's own ShrinkMe JS handles
-  // the AJAX POST and navigation. Timer boost collapses the countdown to <1s.
+  // then #go-submit becomes visible. ShrinkMe validates server-side that the full
+  // countdown elapsed — skipTimerBoost prevents the 400 Bad Request from submitting early.
   {
     id: "mrproblogger",
     match: exact("en.mrproblogger.com"),
     runAt: "loaded",
+    skipTimerBoost: true,
     actions: [
       {
         type: "wait-visibility",
