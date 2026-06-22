@@ -4,6 +4,11 @@ import { installFeatures } from "../settings/install";
 import { getAllRules } from "./rules/index";
 import { matchRule, runRule } from "./engine/dispatcher";
 
+// Write state to window so page.evaluate() in the debug script can read it —
+// console.log from MAIN-world content scripts goes to the extension inspector,
+// not the page's CDP console, so Playwright never sees it.
+(window as Record<string, unknown>)["__cc"] = { ready: true, host: location.hostname };
+
 // Register synchronously at startup — isolated.ts dispatches only after an async
 // storage read, so this listener is always in place before the event fires.
 document.addEventListener(
@@ -30,6 +35,11 @@ function run(config: CCConfig): void {
     return;
   }
 
+  (window as Record<string, unknown>)["__cc"] = {
+    ready: true,
+    host: hostname,
+    rule: matched.id,
+  };
   // Install features only on pages with a matching rule — keeps visibility
   // spoofing, trust proxy, and cloudflare bypass off unrelated sites.
   installFeatures(settings);

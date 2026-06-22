@@ -13,26 +13,16 @@
 
 import { chromium } from "playwright";
 import type { Page } from "playwright";
-import { mkdtempSync, cpSync, existsSync } from "fs";
+import { mkdtempSync } from "fs";
 import { tmpdir } from "os";
 import { resolve } from "path";
-import { execSync } from "child_process";
 
 const startUrl = process.argv[2] ?? "https://shrinkme.click/p6D5dD";
 const extPath = resolve("./build/chrome");
 
-// Chrome refuses CDP on its real default profile dir, so we copy Profile2 into
-// a temp dir. Chrome can stay open; this copy gets the session cookies/storage
-// without touching the real profile or holding its lock.
-const chromeDir = `${process.env["HOME"]}/.config/google-chrome`;
-const profileName = "Profile2";
-const userDataDir = mkdtempSync(`${tmpdir()}/cc-profile-`);
-const localState = `${chromeDir}/Local State`;
-if (existsSync(localState)) cpSync(localState, `${userDataDir}/Local State`);
-cpSync(`${chromeDir}/${profileName}`, `${userDataDir}/${profileName}`, { recursive: true });
-execSync(
-  `rm -f "${userDataDir}/${profileName}/Lock" "${userDataDir}/${profileName}/SingletonLock"`,
-);
+// Fresh temp profile — avoids Chrome's security checks on copied real profiles
+// which silently prevent extension loading (keyring decryption failures, etc.).
+const userDataDir = mkdtempSync(`${tmpdir()}/cc-debug-`);
 
 let hopCount = 0;
 
@@ -40,15 +30,12 @@ console.log(`\n[debug] start : ${startUrl}`);
 console.log(`[debug] ext   : ${extPath}`);
 console.log(`\nSolve captchas manually in the browser window. Ctrl+C to quit.\n`);
 
+// Use Playwright's bundled Chromium (tested against this Playwright version).
+// System Chrome 149+ has changed --load-extension handling vs older builds.
 const ctx = await chromium.launchPersistentContext(userDataDir, {
   headless: false,
-  executablePath: "/usr/bin/google-chrome-stable",
-  args: [
-    `--disable-extensions-except=${extPath}`,
-    `--load-extension=${extPath}`,
-    "--profile-directory=Profile2",
-    "--no-sandbox",
-  ],
+  ignoreDefaultArgs: ["--disable-extensions"],
+  args: [`--load-extension=${extPath}`, "--no-sandbox"],
 });
 
 type CaptchaState = {
@@ -118,9 +105,48 @@ async function dumpPage(page: Page): Promise<void> {
       // Grab any JS globals that might hold the destination
       const win = window as Record<string, unknown>;
       const jsVars: Record<string, string> = {};
-      for (const key of ["tp", "rtg", "link", "url", "destination", "redirect", "goto"]) {
+      for (const key of [
+        "tp",
+        "rtg",
+        "link",
+        "url",
+        "destination",
+        "redirect",
+        "goto",
+        "tp_link",
+        "safelink",
+        "final_url",
+        "shortlink",
+      ]) {
         if (win[key] !== undefined) jsVars[key] = String(win[key]).slice(0, 200);
       }
+
+      // Full attribute dump of tp-snp2 (to see what URL it would navigate to)
+      const tpSnp2El = document.getElementById("tp-snp2");
+      const tpSnp2Attrs = tpSnp2El
+        ? Object.fromEntries([...tpSnp2El.attributes].map((a) => [a.name, a.value.slice(0, 200)]))
+        : null;
+
+      // Check if our popup blocker toast appeared (indicates window.open was intercepted)
+      const popupBlocked = !!document.getElementById("cc-popup-notice");
+
+      // Extract ALL inline scripts (up to 3000 chars each, skip very short ones)
+      const scripts = [...document.querySelectorAll("script:not([src])")]
+        .map((s) => s.textContent ?? "")
+        .filter((t) => t.trim().length > 80)
+        .map((t) => t.trim().slice(0, 3000));
+
+      // tp-snp2 parent element attributes (might be a wrapping anchor)
+      const tpSnp2Parent = tpSnp2El?.parentElement
+        ? {
+            tag: tpSnp2El.parentElement.tagName,
+            attrs: Object.fromEntries(
+              [...tpSnp2El.parentElement.attributes].map((a) => [a.name, a.value.slice(0, 200)]),
+            ),
+          }
+        : null;
+
+      const ccState = (window as Record<string, unknown>)["__cc"] ?? null;
 
       const w = window as Window & { grecaptcha?: { getResponse(): string } };
       const captcha: CaptchaState = {
@@ -148,11 +174,16 @@ async function dumpPage(page: Page): Promise<void> {
       return {
         title: document.title,
         url: location.href,
+        ext: ccState,
         forms,
         clickables,
         dataAttrs,
         jsVars,
         captcha,
+        tpSnp2Attrs,
+        tpSnp2Parent,
+        popupBlocked,
+        scripts,
       };
     })
     .catch((e: Error) => ({ error: e.message }));
@@ -165,6 +196,7 @@ async function dumpPage(page: Page): Promise<void> {
     return;
   }
   console.log(`TITLE: ${dump.title}`);
+  console.log(`EXT:   ${dump.ext ? JSON.stringify(dump.ext) : "❌ content script NOT running"}`);
   console.log(`\n── captcha state ──\n${JSON.stringify(dump.captcha, null, 2)}`);
   if (dump.forms.length) console.log(`\n── forms ──\n${JSON.stringify(dump.forms, null, 2)}`);
   else console.log("\n  (no forms)");
@@ -174,8 +206,47 @@ async function dumpPage(page: Page): Promise<void> {
     console.log(`\n── data attrs ──\n${JSON.stringify(dump.dataAttrs, null, 2)}`);
   if (Object.keys(dump.jsVars).length)
     console.log(`\n── js globals ──\n${JSON.stringify(dump.jsVars, null, 2)}`);
+  if (dump.tpSnp2Attrs)
+    console.log(`\n── tp-snp2 attrs ──\n${JSON.stringify(dump.tpSnp2Attrs, null, 2)}`);
+  if (dump.tpSnp2Parent)
+    console.log(`\n── tp-snp2 parent ──\n${JSON.stringify(dump.tpSnp2Parent, null, 2)}`);
+  if (dump.popupBlocked) console.log(`\n⚠️  POPUP BLOCKER FIRED on this page`);
+  if (dump.scripts?.length) console.log(`\n── inline scripts ──\n${dump.scripts.join("\n---\n")}`);
   console.log(sep);
 }
+
+// ── diagnostics: verify extension actually loaded ───────────────────────────
+{
+  const diagPage = await ctx.newPage();
+  try {
+    await diagPage.goto("chrome://version", { waitUntil: "domcontentloaded", timeout: 5000 });
+    const cmdLine = await diagPage.evaluate(
+      () => document.getElementById("command_line")?.textContent ?? "N/A",
+    );
+    const hasLoadExt = cmdLine.includes("--load-extension");
+    const hasDisableExt = cmdLine.includes("--disable-extensions");
+    console.log(`[diag] --load-extension present : ${hasLoadExt}`);
+    console.log(`[diag] --disable-extensions present : ${hasDisableExt}`);
+    if (!hasLoadExt) console.log(`[diag] FULL CMD: ${cmdLine}`);
+  } catch (e) {
+    console.log(`[diag] chrome://version failed: ${(e as Error).message}`);
+  }
+  try {
+    await diagPage.goto("chrome://extensions", { waitUntil: "domcontentloaded", timeout: 5000 });
+    await diagPage.waitForTimeout(1500);
+    const extCount = await diagPage.evaluate(() => {
+      const mgr = document
+        .querySelector("extensions-manager")
+        ?.shadowRoot?.querySelector("extensions-item-list")?.shadowRoot;
+      return mgr?.querySelectorAll("extensions-item").length ?? -1;
+    });
+    console.log(`[diag] extensions loaded: ${extCount}`);
+  } catch (e) {
+    console.log(`[diag] chrome://extensions failed: ${(e as Error).message}`);
+  }
+  await diagPage.close();
+}
+// ────────────────────────────────────────────────────────────────────────────
 
 const page = await ctx.newPage();
 

@@ -211,9 +211,15 @@ export const shortlinkRules: Rule[] = [
     actions: [
       {
         type: "run",
-        run: (ctx) => {
+        run: async (ctx) => {
           const form = ctx.qs<HTMLFormElement>("form[name='tp']");
-          if (form) form.submit();
+          if (form) {
+            form.submit();
+          } else {
+            // Some themezon-family pages land directly on the countdown step
+            // (no pre-filled tp form). Click "Generate Link" to start the timer.
+            await ctx.click("#btn1");
+          }
         },
       },
       {
@@ -290,7 +296,7 @@ export const shortlinkRules: Rule[] = [
   },
   {
     id: "shrinkme-captcha",
-    match: exact("shrinkme.click"),
+    match: "(^|\\.)shrink(me|e)\\.(click|me|io|in)$",
     runAt: "loaded",
     actions: [
       { type: "wait-captcha", steps: [{ type: "click", selector: "#invisibleCaptchaShortlink" }] },

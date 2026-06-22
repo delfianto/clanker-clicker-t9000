@@ -157,6 +157,7 @@ describe("host matching regression", () => {
     ["tii.la", "/", "tii-la-family"],
     ["iir.li", "/", "tii-la-family"],
     ["shrinkme.click", "/", "shrinkme-captcha"],
+    ["shrinke.me", "/", "shrinkme-captcha"],
     ["paid4link.com", "/", "link-view-captcha-family"],
     ["oii.io", "/", "link-view-captcha-family"],
     ["tlin.me", "/", "link-view-captcha-family"],
