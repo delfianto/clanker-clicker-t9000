@@ -1,8 +1,14 @@
 import type { CCConfig } from "../types/global";
 
 import { installFeatures } from "../settings/install";
+import { installTrustProxy } from "./features/trust";
 import { getAllRules } from "./rules/index";
 import { matchRule, runRule } from "./engine/dispatcher";
+
+// Install trust proxy at document_start, before any page JS runs. Page handlers
+// (e.g. ShrinkMe's DOMContentLoaded click/submit listeners) register AFTER this,
+// so they are all wrapped and see isTrusted:true on our synthetic click events.
+installTrustProxy();
 
 // Write state to window so page.evaluate() in the debug script can read it —
 // console.log from MAIN-world content scripts goes to the extension inspector,
