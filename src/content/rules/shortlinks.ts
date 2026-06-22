@@ -107,35 +107,18 @@ export const shortlinkRules: Rule[] = [
 
   // ─── Click / redirect automation (run after DOM loads) ────────────────────
 
-  // mrproblogger: form#go-link is an AJAX form — form.submit() bypasses the page's
-  // submit handler and shows raw JSON. Fetch the endpoint and navigate to the returned URL.
+  // en.mrproblogger.com is a white-label ShrinkMe instance: 12-second countdown,
+  // then #go-submit becomes visible. Click it; the page's own ShrinkMe JS handles
+  // the AJAX POST and navigation. Timer boost collapses the countdown to <1s.
   {
     id: "mrproblogger",
     match: exact("en.mrproblogger.com"),
     runAt: "loaded",
     actions: [
       {
-        type: "run",
-        run: async ({ waitForElement, qs, navigateTo, signal }) => {
-          // Wait up to 30s for the form — page has a countdown before it appears.
-          await waitForElement("form#go-link", signal).catch(() => null);
-          if (signal.aborted) return;
-          const form = qs<HTMLFormElement>("form#go-link");
-          if (!form) return;
-          const body = new URLSearchParams();
-          for (const el of form.elements) {
-            const inp = el as HTMLInputElement;
-            if (inp.name && inp.value) body.append(inp.name, inp.value);
-          }
-          const resp = await fetch(form.action, {
-            method: "POST",
-            body,
-            headers: { "X-Requested-With": "XMLHttpRequest" },
-            signal,
-          });
-          const json = (await resp.json()) as { status: string; url: string };
-          if (json.status === "ok" && json.url) navigateTo(json.url);
-        },
+        type: "wait-visibility",
+        selector: "#go-submit",
+        steps: [{ type: "click", selector: "#go-submit" }],
       },
     ],
   },
