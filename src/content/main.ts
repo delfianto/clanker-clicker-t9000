@@ -21,8 +21,6 @@ function run(config: CCConfig): void {
   if (!config.settings.enabled) return;
   const { settings } = config;
 
-  installFeatures(settings);
-
   const hostname = location.hostname.replace(/^www\./, "");
   const rules = getAllRules();
   const matched = matchRule(rules, hostname, location.pathname);
@@ -31,6 +29,10 @@ function run(config: CCConfig): void {
   if (matched.requiresFeature && !settings[matched.requiresFeature as keyof typeof settings]) {
     return;
   }
+
+  // Install features only on pages with a matching rule — keeps visibility
+  // spoofing, trust proxy, and cloudflare bypass off unrelated sites.
+  installFeatures(settings);
 
   runRule(matched, config);
 }
