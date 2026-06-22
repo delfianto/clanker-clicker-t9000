@@ -49,4 +49,6 @@ export type Rule = {
   allowFrames?: boolean;
   actions: RuleAction[];
   requiresFeature?: keyof Settings;
+  /** Disable timer boost for this rule — use when the server validates elapsed time server-side. */
+  skipTimerBoost?: boolean;
 };

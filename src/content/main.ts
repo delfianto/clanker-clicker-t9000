@@ -40,11 +40,12 @@ function run(config: CCConfig): void {
     host: hostname,
     rule: matched.id,
   };
-  // Timer boost accelerates reCAPTCHA's internal timing checks → bot detection.
-  // Disable it on captcha-first pages; the countdown page that follows gets a fresh run.
-  const firstIsCaptcha = matched.actions[0]?.type === "wait-captcha";
+  // Disable timer boost when the rule opts out (server validates elapsed time server-side)
+  // or when the first action is a captcha (accelerated timers break reCAPTCHA).
+  const suppressBoost =
+    matched.skipTimerBoost === true || matched.actions[0]?.type === "wait-captcha";
   installFeatures(
-    firstIsCaptcha
+    suppressBoost
       ? { ...settings, timerBoost: { ...settings.timerBoost, enabled: false } }
       : settings,
   );
