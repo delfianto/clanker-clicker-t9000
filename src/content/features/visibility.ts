@@ -25,9 +25,9 @@ export function installVisibilitySpoofing(): () => void {
   const stopFocus = (e: Event): void => e.stopImmediatePropagation();
   window.addEventListener("focus", stopFocus, { capture: true, passive: true });
   window.addEventListener("blur", stopFocus, { capture: true, passive: true });
-
-  // Block visibilitychange from firing
-  document.addEventListener("visibilitychange", stopFocus, { capture: true });
+  // visibilitychange is NOT blocked: some countdown scripts (e.g. ShrinkMe) listen
+  // for it to start the timer. The property getters above already return "visible"
+  // so any handler that reads document.visibilityState still sees the spoofed value.
 
   return () => {
     for (const [prop, desc] of descriptors) {
@@ -42,6 +42,5 @@ export function installVisibilitySpoofing(): () => void {
     document.hasFocus = origHasFocus;
     window.removeEventListener("focus", stopFocus, { capture: true });
     window.removeEventListener("blur", stopFocus, { capture: true });
-    document.removeEventListener("visibilitychange", stopFocus, { capture: true });
   };
 }
