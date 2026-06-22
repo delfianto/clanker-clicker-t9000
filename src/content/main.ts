@@ -40,9 +40,14 @@ function run(config: CCConfig): void {
     host: hostname,
     rule: matched.id,
   };
-  // Install features only on pages with a matching rule — keeps visibility
-  // spoofing, trust proxy, and cloudflare bypass off unrelated sites.
-  installFeatures(settings);
+  // Timer boost accelerates reCAPTCHA's internal timing checks → bot detection.
+  // Disable it on captcha-first pages; the countdown page that follows gets a fresh run.
+  const firstIsCaptcha = matched.actions[0]?.type === "wait-captcha";
+  installFeatures(
+    firstIsCaptcha
+      ? { ...settings, timerBoost: { ...settings.timerBoost, enabled: false } }
+      : settings,
+  );
 
   runRule(matched, config);
 }
