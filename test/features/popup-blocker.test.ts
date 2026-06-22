@@ -7,7 +7,7 @@ afterEach(() => {
   uninstall = null;
 });
 
-test("intercepts http(s) window.open: returns null and schedules navigation", async () => {
+test("intercepts http(s) window.open: returns null, does NOT navigate main tab", async () => {
   const assign = mock((url: string) => url);
   Object.defineProperty(window, "location", {
     value: { assign, href: "https://example.com" },
@@ -17,9 +17,10 @@ test("intercepts http(s) window.open: returns null and schedules navigation", as
   uninstall = installPopupBlocker();
   const result = window.open("https://ad.example/popup");
   expect(result).toBeNull();
-  // Navigation is scheduled as a microtask
+  // Must not navigate — ad-revenue popups fire before the page's own
+  // location.href destination assignment; following them hijacks the tab.
   await Promise.resolve();
-  expect(assign).toHaveBeenCalledWith("https://ad.example/popup");
+  expect(assign).not.toHaveBeenCalled();
 });
 
 test("passes through non-http opens unchanged", () => {
