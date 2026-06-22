@@ -6,10 +6,10 @@ export function installPopupBlocker(): () => void {
     if (!/^https?:\/\//i.test(href)) {
       return origOpen(url, _target, _features);
     }
-    // On shortlink pages the popup IS the next hop — navigate there instead of
-    // blocking. Use a microtask so we run after any same-tick location.href
-    // assignment from the same click handler (last assignment wins in browsers).
-    Promise.resolve().then(() => location.assign(href));
+    // Suppress the popup and return null. Bypass navigation is handled by rule
+    // actions (redirect-from-href, wait-visibility + click, etc.) — following
+    // window.open destinations was wrong because ad-revenue popups fire first and
+    // their microtask override the page's own location.href destination assignment.
     return null;
   };
 
