@@ -233,7 +233,9 @@ export const shortlinkRules: Rule[] = [
       {
         type: "wait-visibility",
         selector: "#tp-snp2",
-        steps: [{ type: "click", selector: "#tp-snp2" }],
+        // redirect-from-href reads the anchor's href directly — no click events fire,
+        // so the page's ad-popup window.open handler is never triggered.
+        steps: [{ type: "redirect-from-href", selector: "#tp-snp2" }],
       },
     ],
   },
