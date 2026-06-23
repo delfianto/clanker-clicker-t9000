@@ -32,6 +32,16 @@
             "command": "bun run check"
           }
         ]
+      },
+      {
+        "matcher": "Bash(git commit*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run build",
+            "statusMessage": "Building extension..."
+          }
+        ]
       }
     ]
   }
