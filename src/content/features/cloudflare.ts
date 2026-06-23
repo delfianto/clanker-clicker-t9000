@@ -17,6 +17,9 @@ export function installCloudflareTurnstileBypass(): () => void {
   // so querySelector can't reach it, but guard against edge cases anyway.
   const timer = setTimeout(() => {
     if (hasRecaptcha()) return;
+    // Scope to pages that actually have a Turnstile widget — avoids clicking
+    // unrelated checkboxes (e.g. dark-mode toggles) on non-Turnstile pages.
+    if (!document.querySelector("input[name='cf-turnstile-response']")) return;
     const checkbox = document.querySelector<HTMLInputElement>('input[type="checkbox"]');
     if (checkbox && !checkbox.checked) checkbox.click();
   }, 300);
