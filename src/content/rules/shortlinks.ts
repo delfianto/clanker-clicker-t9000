@@ -131,6 +131,26 @@ export const shortlinkRules: Rule[] = [
   waitRedirect("linksly.co", "div.col-md-12 a"),
   redirectHref("linkspy.cc", ".skipButton"),
   waitRedirect("mohtawaa.com", "a.btn.btn-success.btn-lg.get-link.enabled"),
+  // ImageBam shows a "Continue to your image" interstitial. The destination href
+  // is already in the DOM; clicking it sets nsfw_inter=1 so the server skips the
+  // gate on the next load. We set the cookie ourselves and navigate directly.
+  {
+    id: "imagebam",
+    match: exact("imagebam.com"),
+    runAt: "loaded",
+    actions: [
+      {
+        type: "run",
+        run: async (ctx) => {
+          const link = ctx.qs<HTMLAnchorElement>("#continue a[href]");
+          if (!link) return;
+          const exp = new Date(Date.now() + 6 * 60 * 60 * 1000).toUTCString();
+          document.cookie = `nsfw_inter=1; expires=${exp}; path=/`;
+          ctx.navigateTo(link.href);
+        },
+      },
+    ],
+  },
   {
     id: "multiup-io",
     match: exact("multiup.io"),

@@ -136,6 +136,7 @@ describe("host matching regression", () => {
     ["lanza.me", "/", "lanza.me"],
     ["linksly.co", "/", "linksly.co"],
     ["mohtawaa.com", "/", "mohtawaa.com"],
+    ["imagebam.com", "/", "imagebam"],
     // multi-host hosts() rules
     ["topshare.in", "/", "form-tp-pattern"],
     ["djssmusic.com", "/", "form-tp-pattern"],
