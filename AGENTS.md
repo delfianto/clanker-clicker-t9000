@@ -213,3 +213,10 @@ Resized from 256px source with `magick input.png -resize NxN -filter Lanczos out
 - `build/` — gitignored; always regenerated
 - `*.xpi` — gitignored
 - `.claude/settings.local.json` — gitignored; local permission overrides stay local
+
+### Post-commit build hook
+
+A `PostToolUse` hook on `Bash(git commit*)` runs `bun run build` automatically after every
+commit. **Always run `git add` and `git commit` as separate Bash calls** — combining them with
+`&&` in one command makes the hook matcher miss the commit (the compound command starts with
+`git add`, not `git commit`).
