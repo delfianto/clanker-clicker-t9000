@@ -54,11 +54,14 @@ function run(config: CCConfig, rule: Rule): void {
   // Disable timer boost when the rule opts out (server validates elapsed time server-side)
   // or when the first action is a captcha (accelerated timers break reCAPTCHA).
   const suppressBoost = rule.skipTimerBoost === true || rule.actions[0]?.type === "wait-captcha";
-  installFeatures(
-    suppressBoost
-      ? { ...settings, timerBoost: { ...settings.timerBoost, enabled: false } }
-      : settings,
-  );
+  installFeatures({
+    ...settings,
+    ...(suppressBoost ? { timerBoost: { ...settings.timerBoost, enabled: false } } : {}),
+    // Rules that ride the page's own script (e.g. a ShrinkMe countdown) opt out of
+    // anti-adblock — these sites bundle the countdown into the adblock-detector
+    // file, so removing it freezes the counter.
+    ...(rule.skipAntiAdblock ? { antiAdblock: false } : {}),
+  });
 
   runRule(rule, config);
 }

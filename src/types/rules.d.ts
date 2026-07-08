@@ -51,4 +51,10 @@ export type Rule = {
   requiresFeature?: keyof Settings;
   /** Disable timer boost for this rule — use when the server validates elapsed time server-side. */
   skipTimerBoost?: boolean;
+  /**
+   * Disable the anti-adblock remover for this rule's page. Use when the bypass
+   * depends on the page's own script (e.g. a ShrinkMe countdown) that these sites
+   * bundle together with adblock-detection — stripping it would freeze the page.
+   */
+  skipAntiAdblock?: boolean;
 };
