@@ -120,13 +120,48 @@ export const downloadRules: Rule[] = [
     ],
   },
   {
+    // usersdrive.com is XFileSharing with a multi-page free-download flow:
+    //   stage-1 "Free Download" button → captcha + #downloadbtn → final page whose
+    //   direct link is <a class="btn btn-download" href=" …file.zip">.
+    // The rule re-runs on every page load, so it handles whichever step it lands on.
+    // The final anchor is handled at the TOP level, NOT inside wait-captcha — the
+    // final page has no captcha, so gating it there hangs forever (the bug that left
+    // the download button sitting there unclicked).
     id: "usersdrive",
     match: "^usersdrive\\.com$",
     runAt: "loaded",
     requiresFeature: DL,
     actions: [
-      { type: "click", selector: "#fbtn1", delay: 2000 },
-      { type: "wait-captcha", steps: [{ type: "click", selector: "#downloadbtn" }] },
+      {
+        type: "run",
+        run: (ctx) => {
+          // Final page: go straight to the file. `.href` resolves clean via the DOM
+          // property even though the raw attribute carries a stray leading space.
+          const dl = ctx.qs<HTMLAnchorElement>("a.btn-download");
+          if (dl?.href) {
+            ctx.navigateTo(dl.href);
+            return;
+          }
+          // Otherwise advance the flow: click a stage-1 "Free Download" button if
+          // this config shows one (fire-and-forget — never block on its absence).
+          void ctx
+            .click("#fbtn1, input[name='method_free'], button[name='method_free']")
+            .catch(() => {});
+        },
+      },
+      {
+        type: "wait-captcha",
+        steps: [
+          { type: "click", selector: "#downloadbtn" },
+          // If #downloadbtn reveals the direct link inline (no reload), take it; on a
+          // reload the top action catches it when the rule re-runs on the next page.
+          {
+            type: "wait-element",
+            selector: "a.btn-download",
+            steps: [{ type: "redirect-from-href", selector: "a.btn-download" }],
+          },
+        ],
+      },
     ],
   },
 ];
