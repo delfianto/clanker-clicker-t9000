@@ -110,11 +110,14 @@ export const shortlinkRules: Rule[] = [
   // en.mrproblogger.com is a white-label ShrinkMe instance: 12-second countdown,
   // then #go-submit becomes visible. ShrinkMe validates server-side that the full
   // countdown elapsed — skipTimerBoost prevents the 400 Bad Request from submitting early.
+  // skipAntiAdblock keeps the countdown alive: ShrinkMe bundles its timer into the
+  // adblock-detector script, so the remover would strip it and freeze the counter.
   {
     id: "mrproblogger",
     match: exact("en.mrproblogger.com"),
     runAt: "loaded",
     skipTimerBoost: true,
+    skipAntiAdblock: true,
     actions: [
       {
         type: "wait-visibility",
