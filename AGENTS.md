@@ -53,9 +53,15 @@ What's covered (≈80% lines; declarative core is ~100%):
 - **DOM-backed** — every `RuleAction` executor (via happy-dom, spying `location.assign`),
   `waitForElement`, `makeCtx`, `runRule` (incl. the Cloudflare-interstitial guard), and the
   cleanly-reversible features (popup-blocker, timers, adblock, visibility).
+- **Trust proxy + synthetic marking** — `engine/synthetic.ts` (`markSynthetic`/`isSynthetic`,
+  `simulateClick`) and `features/trust.ts`. happy-dom's HTMLElements bypass global
+  `EventTarget.prototype` patching, so the trust tests exercise the wrapper via a plain
+  `new EventTarget()`; they lock in the invariants that matter — only _marked_ synthetic
+  events get `isTrusted:true`, real page events pass through untouched, and
+  `removeEventListener`/dedupe still work (the regression that broke alldebrid's checkbox list).
 
-Deliberately **not** unit-tested (global-prototype patching / polling — verify by live
-smoke-test): `features/trust.ts`, `features/cloudflare.ts`, `engine/captcha.ts`.
+Deliberately **not** unit-tested (side-effectful global patching / polling — verify by live
+smoke-test): `features/cloudflare.ts`, `engine/captcha.ts`.
 
 Notes: tests import from `bun:test` explicitly (no globals). `test/` is not in the tsc
 `include` (keeps bun's test types out of the extension typecheck); it's still fmt+lint-checked
@@ -84,7 +90,8 @@ src/
     features/
       timers.ts       # installTimerBoost — setTimeout/setInterval acceleration
       visibility.ts   # installVisibilitySpoofing — document.hidden spoofing
-      trust.ts        # installTrustProxy — isTrusted:true on cloned events
+      synthetic.ts    # markSynthetic/isSynthetic registry + simulateClick (marks its events)
+      trust.ts        # installTrustProxy — isTrusted:true on *marked synthetic* events only
       popup-blocker.ts
       adblock.ts
       cloudflare.ts   # Turnstile auto-solve hook

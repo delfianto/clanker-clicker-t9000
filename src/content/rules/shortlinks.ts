@@ -170,14 +170,16 @@ export const shortlinkRules: Rule[] = [
     actions: [
       {
         type: "run",
-        run: async ({ params, navigateTo, waitForElement }) => {
+        run: async ({ params, navigateTo, click }) => {
           const s = params.get("s");
           if (s) {
             navigateTo(s.startsWith("http") ? s : "https://" + s);
             return;
           }
-          const btn = await waitForElement("button#btn-main");
-          (btn as HTMLElement).click();
+          // ctx.click dispatches a synthetic-but-marked click so trust.ts spoofs
+          // isTrusted:true. A native btn.click() would not be marked, so ouo's
+          // handler would see isTrusted:false and reject it.
+          await click("button#btn-main");
         },
       },
     ],
