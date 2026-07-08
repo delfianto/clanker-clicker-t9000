@@ -248,19 +248,38 @@ export const shortlinkRules: Rule[] = [
           const form = ctx.qs<HTMLFormElement>("form[name='tp']");
           if (form) {
             form.submit();
-          } else {
-            // Some themezon-family pages land directly on the countdown step
-            // (no pre-filled tp form). Click "Generate Link" to start the timer.
-            await ctx.click("#btn1");
+            return;
           }
+          // Some themezon-family pages land directly on the countdown step (no
+          // pre-filled tp form) and expose a "Generate Link" (#btn1) to start the
+          // timer. Fire the click but DON'T await it: the post-submit countdown
+          // step has no #btn1, and awaiting waitForElement("#btn1") would block
+          // ~30s then abort the whole rule, so the #tp-snp2 step below never ran.
+          void ctx.click("#btn1").catch(() => {});
         },
       },
       {
         type: "wait-visibility",
         selector: "#tp-snp2",
-        // redirect-from-href reads the anchor's href directly — no click events fire,
-        // so the page's ad-popup window.open handler is never triggered.
-        steps: [{ type: "redirect-from-href", selector: "#tp-snp2" }],
+        steps: [
+          {
+            type: "run",
+            // Prefer reading #tp-snp2's href directly (no click → no ad-popup
+            // window.open). Fall back to a real click for the button / onclick
+            // variants that navigate via JS instead of exposing a usable href —
+            // the reference addon clicks #tp-snp2 for this exact host family.
+            run: async (ctx) => {
+              const el = ctx.qs<HTMLAnchorElement>("#tp-snp2");
+              if (!el) return;
+              const href = el.href;
+              if (href && /^https?:\/\//i.test(href) && href !== location.href) {
+                ctx.navigateTo(href);
+              } else {
+                await ctx.click("#tp-snp2");
+              }
+            },
+          },
+        ],
       },
     ],
   },
