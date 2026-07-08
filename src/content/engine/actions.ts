@@ -3,6 +3,7 @@ import { waitForElement, waitForVisible, sleep } from "./wait";
 import { waitForCaptcha } from "./captcha";
 import { qs } from "./dom";
 import { makeCtx } from "./ctx";
+import { markSynthetic, simulateClick } from "./synthetic";
 import {
   navigateTo,
   metaRedirect,
@@ -10,8 +11,6 @@ import {
   extractFromPath,
   extractFromOnclick,
 } from "./redirect";
-
-const CLICK_EVENTS = ["mouseover", "mousedown", "mouseup", "click"] as const;
 
 export async function runActions(actions: RuleAction[], signal: AbortSignal): Promise<void> {
   for (const action of actions) {
@@ -143,20 +142,12 @@ async function executeAction(action: RuleAction, signal: AbortSignal): Promise<v
   }
 }
 
-function simulateClick(el: Element): void {
-  el.removeAttribute("disabled");
-  el.removeAttribute("target");
-  for (const type of CLICK_EVENTS) {
-    el.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true }));
-  }
-}
-
 export function metaNavigate(url: string): void {
   metaRedirect(url);
 }
 
 export function selectText(el: HTMLInputElement | HTMLTextAreaElement, value: string): void {
   el.value = value;
-  el.dispatchEvent(new Event("input", { bubbles: true }));
-  el.dispatchEvent(new Event("change", { bubbles: true }));
+  el.dispatchEvent(markSynthetic(new Event("input", { bubbles: true })));
+  el.dispatchEvent(markSynthetic(new Event("change", { bubbles: true })));
 }
