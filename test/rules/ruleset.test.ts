@@ -179,6 +179,7 @@ describe("host matching regression", () => {
     ["pixeldrain.com", "/u/abc", "pixeldrain"],
     ["mediafire.com", "/file/x", "mediafire"],
     ["turbobit.net", "/", "turbobit"],
+    ["usersdrive.com", "/i79xonlemlbv.html", "usersdrive"],
     // pathMatch gating
     ["facebook.com", "/linkshim", "facebook-instagram-u"],
     ["facebook.com", "/", undefined],
