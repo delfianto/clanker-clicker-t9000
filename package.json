@@ -9,7 +9,7 @@
     "build:firefox": "BROWSER=firefox vp build",
     "dev": "vp build --watch",
     "dev:firefox": "BROWSER=firefox vp build --watch",
-    "check": "vp check",
+    "check": "vp check && tsc -p tsconfig.json",
     "lint": "vp lint src/",
     "fmt": "vp fmt src/",
     "test": "bun test",
@@ -21,13 +21,13 @@
   },
   "devDependencies": {
     "@happy-dom/global-registrator": "^20.10.6",
-    "@types/chrome": "^0.0.268",
-    "@types/webextension-polyfill": "^0.12.0",
+    "@types/chrome": "^0.2.2",
+    "@types/webextension-polyfill": "^0.12.5",
     "happy-dom": "^20.10.6",
-    "playwright": "^1.61.0",
-    "typescript": "rc",
-    "vite-plugin-web-extension": "latest",
-    "vite-plus": "latest"
+    "playwright": "^1.61.1",
+    "typescript": "^7.0.2",
+    "vite-plugin-web-extension": "^4.5.1",
+    "vite-plus": "^0.2.4"
   },
   "trustedDependencies": [
     "spawn-sync"

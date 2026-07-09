@@ -72,7 +72,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Auto-apply: persist on any change (no Save button). Text inputs are debounced
   // so we don't write storage on every keystroke. Settings take effect on the next
   // page load; the Reload button force-applies them to the current tab.
-  let saveTimer: ReturnType<typeof setTimeout> | undefined;
+  let saveTimer: number | undefined;
   const controls = document.querySelectorAll<HTMLInputElement | HTMLSelectElement>("input, select");
   for (const control of controls) {
     const isText =
