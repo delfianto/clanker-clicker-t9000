@@ -7,13 +7,13 @@ Personal tool; no external server dependencies, zero telemetry, MIT licensed.
 
 ## Stack
 
-| Tool                      | Version           | Purpose                                                                                |
-| ------------------------- | ----------------- | -------------------------------------------------------------------------------------- |
-| TypeScript                | 7.0 RC (`rc` tag) | Language — strict, no legacy cruft                                                     |
-| Bun                       | 1.x               | Package manager + script runner (not npm/yarn)                                         |
-| vite-plus (`vp`)          | latest            | Unified VoidZero toolchain — bundler, linter (oxlint), formatter (oxfmt), type checker |
-| vite-plugin-web-extension | 4.x               | Multi-entry extension build + manifest generation                                      |
-| webextension-polyfill     | 0.12              | Unified `browser.*` API surface across Chrome/Firefox                                  |
+| Tool                      | Version      | Purpose                                                                                |
+| ------------------------- | ------------ | -------------------------------------------------------------------------------------- |
+| TypeScript                | 7.0 (stable) | Language — strict, no legacy cruft                                                     |
+| Bun                       | 1.x          | Package manager + script runner (not npm/yarn)                                         |
+| vite-plus (`vp`)          | latest       | Unified VoidZero toolchain — bundler, linter (oxlint), formatter (oxfmt), type checker |
+| vite-plugin-web-extension | 4.x          | Multi-entry extension build + manifest generation                                      |
+| webextension-polyfill     | 0.12         | Unified `browser.*` API surface across Chrome/Firefox                                  |
 
 All commands go through `bun run <script>` or the `vp` CLI directly.  
 **Never use npm or npx.**
@@ -26,7 +26,7 @@ All commands go through `bun run <script>` or the `vp` CLI directly.
 bun run build           # production build → build/chrome/
 bun run build:firefox   # production build → build/firefox/
 bun run dev             # watch mode (Chrome)
-bun run check           # vp check — fmt + oxlint + tsc (run before committing)
+bun run check           # vp check (fmt + oxlint) && tsc (run before committing)
 bun run lint            # vp lint src/ — oxlint only
 bun run fmt             # vp fmt src/ — oxfmt format
 bun run test            # bun test — unit suite (run with check before merging)

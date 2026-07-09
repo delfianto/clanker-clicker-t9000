@@ -24,7 +24,7 @@ if (matched) installTrustProxy();
 // Write state to window so page.evaluate() in the debug script can read it —
 // console.log from MAIN-world content scripts goes to the extension inspector,
 // not the page's CDP console, so Playwright never sees it.
-(window as Record<string, unknown>)["__cc"] = { ready: true, host: hostname, rule: matched?.id };
+window.__cc = { ready: true, host: hostname, rule: matched?.id };
 
 // Nothing matched: don't even register the config listener. The page is left
 // exactly as the browser delivered it.

@@ -18,5 +18,6 @@ export type CCConfig = {
 declare global {
   interface Window {
     __CC_CONFIG?: CCConfig;
+    __cc?: { ready: boolean; host: string; rule: string | undefined };
   }
 }
