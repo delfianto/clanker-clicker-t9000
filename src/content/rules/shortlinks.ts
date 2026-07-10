@@ -136,10 +136,11 @@ export const shortlinkRules: Rule[] = [
   waitRedirect("mohtawaa.com", "a.btn.btn-success.btn-lg.get-link.enabled"),
   // ImageBam shows a "Continue to your image" interstitial whose link points back
   // at the same /view/ URL — the gate is purely cookie-driven. Their own click
-  // handler sets `sfw_inter=1`; the server then skips the interstitial on reload.
-  // We set the exact same cookie ourselves and navigate. NOTE: the cookie is
-  // `sfw_inter`, NOT `nsfw_inter` — the wrong name leaves the gate up and the
-  // self-referential navigation loops forever.
+  // handler (`$('[data-shown="inter"]').click(...)`) sets `nsfw_inter=1` for 6h;
+  // the server then skips the interstitial on reload. We set the exact same cookie
+  // ourselves and navigate. NOTE: the cookie is `nsfw_inter`, NOT `sfw_inter` —
+  // the wrong name leaves the gate up and the self-referential navigation loops
+  // forever (verified live: `sfw_inter=1` re-serves the `#continue` interstitial).
   {
     id: "imagebam",
     match: exact("imagebam.com"),
@@ -151,7 +152,7 @@ export const shortlinkRules: Rule[] = [
           const link = ctx.qs<HTMLAnchorElement>("#continue a[href]");
           if (!link) return;
           const exp = new Date(Date.now() + 6 * 60 * 60 * 1000).toUTCString();
-          document.cookie = `sfw_inter=1; expires=${exp}; path=/`;
+          document.cookie = `nsfw_inter=1; expires=${exp}; path=/`;
           ctx.navigateTo(link.href);
         },
       },
