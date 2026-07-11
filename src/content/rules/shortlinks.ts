@@ -107,11 +107,13 @@ export const shortlinkRules: Rule[] = [
 
   // ─── Click / redirect automation (run after DOM loads) ────────────────────
 
-  // en.mrproblogger.com is a white-label ShrinkMe instance: 12-second countdown,
-  // then #go-submit becomes visible. ShrinkMe validates server-side that the full
-  // countdown elapsed — skipTimerBoost prevents the 400 Bad Request from submitting early.
-  // skipAntiAdblock keeps the countdown alive: ShrinkMe bundles its timer into the
-  // adblock-detector script, so the remover would strip it and freeze the counter.
+  // en.mrproblogger.com is a white-label ShrinkMe banner-page: a 12-second counter
+  // runs, then ShrinkMe auto-submits #go-link and the server's AJAX reply drops the
+  // real destination straight into <a class="get-link" href="…">. skipTimerBoost keeps
+  // the counter honest (the server 400s if it elapses too fast); skipAntiAdblock keeps
+  // the counter alive (ShrinkMe bundles the timer into its adblock-detector script).
+  // No click needed — the href is right there, and clicking get-link only spawns an
+  // ad-popup — so we poll until it resolves to an off-site URL and navigate to it.
   {
     id: "mrproblogger",
     match: exact("en.mrproblogger.com"),
@@ -120,9 +122,21 @@ export const shortlinkRules: Rule[] = [
     skipAntiAdblock: true,
     actions: [
       {
-        type: "wait-visibility",
-        selector: "#go-submit",
-        steps: [{ type: "click", selector: "#go-submit" }],
+        type: "run",
+        run: async (ctx) => {
+          const deadline = Date.now() + 60_000;
+          while (Date.now() < deadline && !ctx.signal.aborted) {
+            const link = ctx.qs<HTMLAnchorElement>("a.get-link");
+            const href = link?.href ?? "";
+            if (/^https?:\/\//i.test(href) && new URL(href).hostname !== location.hostname) {
+              ctx.navigateTo(href);
+              return;
+            }
+            await new Promise((resolve) => {
+              setTimeout(resolve, 300);
+            });
+          }
+        },
       },
     ],
   },
