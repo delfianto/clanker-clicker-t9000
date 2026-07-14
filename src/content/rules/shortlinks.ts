@@ -9,6 +9,25 @@ import {
   waitRedirect,
 } from "./builders";
 
+// ImageBam picks its interstitial cookie name per image *content rating*: an
+// adult-rated /view/ writes `nsfw_inter=1`, a safe-rated one writes `sfw_inter=1`.
+// Both pages are otherwise byte-identical (same `#continue` markup, same
+// `data-shown="inter"`), and the server only skips the gate for the name matching
+// that image's own rating — so any hardcoded name clears one class and loops
+// forever on the other. Scrape the name out of the page's own click handler rather
+// than guessing; fall back to setting both if their markup ever shifts.
+const IMAGEBAM_COOKIE_RE = /document\.cookie\s*=\s*["'](\w*inter)=1/g;
+
+export function imagebamCookieNames(doc: Document = document): string[] {
+  const found = new Set<string>();
+  for (const script of doc.querySelectorAll<HTMLScriptElement>("script:not([src])")) {
+    for (const [, name] of script.textContent?.matchAll(IMAGEBAM_COOKIE_RE) ?? []) {
+      if (name) found.add(name);
+    }
+  }
+  return found.size > 0 ? [...found] : ["sfw_inter", "nsfw_inter"];
+}
+
 export const shortlinkRules: Rule[] = [
   // ─── URL param extraction (run at document_start, no DOM needed) ───────────
 
@@ -150,11 +169,10 @@ export const shortlinkRules: Rule[] = [
   waitRedirect("mohtawaa.com", "a.btn.btn-success.btn-lg.get-link.enabled"),
   // ImageBam shows a "Continue to your image" interstitial whose link points back
   // at the same /view/ URL — the gate is purely cookie-driven. Their own click
-  // handler (`$('[data-shown="inter"]').click(...)`) sets `nsfw_inter=1` for 6h;
-  // the server then skips the interstitial on reload. We set the exact same cookie
-  // ourselves and navigate. NOTE: the cookie is `nsfw_inter`, NOT `sfw_inter` —
-  // the wrong name leaves the gate up and the self-referential navigation loops
-  // forever (verified live: `sfw_inter=1` re-serves the `#continue` interstitial).
+  // handler (`$('[data-shown="inter"]').click(...)`) sets the rating-specific
+  // interstitial cookie for 6h; the server then skips the gate on reload. We set
+  // the exact same cookie(s) ourselves and navigate. See `imagebamCookieNames` for
+  // why the name must be read from the page instead of hardcoded.
   {
     id: "imagebam",
     match: exact("imagebam.com"),
@@ -166,7 +184,9 @@ export const shortlinkRules: Rule[] = [
           const link = ctx.qs<HTMLAnchorElement>("#continue a[href]");
           if (!link) return;
           const exp = new Date(Date.now() + 6 * 60 * 60 * 1000).toUTCString();
-          document.cookie = `nsfw_inter=1; expires=${exp}; path=/`;
+          for (const name of imagebamCookieNames()) {
+            document.cookie = `${name}=1; expires=${exp}; path=/`;
+          }
           ctx.navigateTo(link.href);
         },
       },
