@@ -241,6 +241,13 @@ export const shortlinkRules: Rule[] = [
       },
     ],
   },
+  // trans.firm.in gates every img-*.html page behind a "Click To View Image"
+  // submit button (name='imgContinue', one input per locale). The server only
+  // checks that the param is present — a bare form.submit() omits it (no
+  // button was "activated"), so we click the input instead; simulateClick's
+  // click event runs the native activation behavior and submits it properly.
+  clickAfter("trans.firm.in", "#continuetoimage input[name='imgContinue']", 0),
+
   // ─── Form submit patterns (cover many sites each) ─────────────────────────
 
   formSubmitThenClick(
