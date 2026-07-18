@@ -2,9 +2,15 @@ import { afterEach, expect, mock, test } from "bun:test";
 import { installPopupBlocker } from "../../src/content/features/popup-blocker";
 
 let uninstall: (() => void) | null = null;
+// window === globalThis once happy-dom is globally registered (see test/setup.ts),
+// so replacing window.location below replaces the *shared* global location for
+// every test file that runs after this one. Restore the real descriptor or the
+// mock leaks process-wide.
+const realLocation = Object.getOwnPropertyDescriptor(window, "location")!;
 afterEach(() => {
   uninstall?.();
   uninstall = null;
+  Object.defineProperty(window, "location", realLocation);
 });
 
 test("intercepts http(s) window.open: returns null, does NOT navigate main tab", async () => {

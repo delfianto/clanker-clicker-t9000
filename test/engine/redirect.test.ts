@@ -6,44 +6,6 @@ import {
   extractFromPath,
 } from "../../src/content/engine/redirect";
 
-test("TEMP DIAGNOSTIC: location identity dump", () => {
-  console.error(
-    "DIAG",
-    JSON.stringify({
-      typeofLocation: typeof location,
-      locationCtor: location?.constructor?.name,
-      isWindowLocation: location === window.location,
-      isWindowDocument: document === window.document,
-      href: (() => {
-        try {
-          return location.href;
-        } catch (e) {
-          return `THROW:${String(e)}`;
-        }
-      })(),
-      hash: (() => {
-        try {
-          return location.hash;
-        } catch (e) {
-          return `THROW:${String(e)}`;
-        }
-      })(),
-      pathname: (() => {
-        try {
-          return location.pathname;
-        } catch (e) {
-          return `THROW:${String(e)}`;
-        }
-      })(),
-    }),
-  );
-  window.happyDOM.setURL("https://diag.test/before-decode?z=1");
-  console.error(
-    "DIAG-after-setURL",
-    JSON.stringify({ href: location.href, hash: location.hash, pathname: location.pathname }),
-  );
-});
-
 describe("decode", () => {
   test("none returns input unchanged (and is the default)", () => {
     expect(decode("abc", "none")).toBe("abc");
@@ -70,15 +32,6 @@ describe("decode", () => {
 describe("extractFromParam", () => {
   test("reads a query param", () => {
     window.happyDOM.setURL("https://s.test/?u=hello&x=1");
-    console.error(
-      "DIAG-query-param",
-      JSON.stringify({
-        typeofLocation: typeof location,
-        locationCtor: location?.constructor?.name,
-        href: location.href,
-        search: location.search,
-      }),
-    );
     expect(extractFromParam("u", "none")).toBe("hello");
   });
   test("decodes the param value", () => {
