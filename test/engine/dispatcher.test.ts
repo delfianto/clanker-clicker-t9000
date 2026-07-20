@@ -1,5 +1,6 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, spyOn, test } from "bun:test";
 import { matchRule, runRule } from "../../src/content/engine/dispatcher";
+import { TimeoutError } from "../../src/content/engine/wait";
 import { getAllRules } from "../../src/content/rules/index";
 import { DEFAULT_SETTINGS } from "../../src/settings/schema";
 import type { CCConfig } from "../../src/types/global";
@@ -87,6 +88,59 @@ describe("runRule", () => {
     runRule(flagRule(ran), cfg);
     await tick();
     expect(ran.value).toBe(true);
+  });
+
+  test("a selector timeout is debug noise, not a warning", async () => {
+    window.happyDOM.setURL("https://site.test/");
+    document.title = "Normal page";
+    const warn = spyOn(console, "warn").mockImplementation(() => {});
+    const debug = spyOn(console, "debug").mockImplementation(() => {});
+
+    runRule(
+      {
+        id: "t",
+        match: ".*",
+        runAt: "start",
+        actions: [
+          {
+            type: "run",
+            run: () => Promise.reject(new TimeoutError("#nope")),
+          },
+        ],
+      },
+      cfg,
+    );
+    await tick();
+
+    expect(warn).not.toHaveBeenCalled();
+    expect(debug.mock.calls[0]?.[0]).toContain('Rule "t" timed out');
+    warn.mockRestore();
+    debug.mockRestore();
+  });
+
+  test("a genuine error still warns", async () => {
+    window.happyDOM.setURL("https://site.test/");
+    document.title = "Normal page";
+    const warn = spyOn(console, "warn").mockImplementation(() => {});
+
+    runRule(
+      {
+        id: "t",
+        match: ".*",
+        runAt: "start",
+        actions: [
+          {
+            type: "run",
+            run: () => Promise.reject(new Error("boom")),
+          },
+        ],
+      },
+      cfg,
+    );
+    await tick();
+
+    expect(warn.mock.calls[0]?.[0]).toContain('Rule "t" failed');
+    warn.mockRestore();
   });
 
   test("skips execution on a Cloudflare interstitial (Wave 2 guard)", async () => {

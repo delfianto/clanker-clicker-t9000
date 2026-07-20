@@ -138,6 +138,9 @@ describe("host matching regression", () => {
     ["mohtawaa.com", "/", "mohtawaa.com"],
     ["imagebam.com", "/", "imagebam"],
     ["trans.firm.in", "/img-6a5abd3527919.html", "trans.firm.in"],
+    // Deliberately unfiltered by path: the POST result renders the same URL, and
+    // the rule is expected to match it and no-op (see the wait:false test below).
+    ["trans.firm.in", "/", "trans.firm.in"],
     // multi-host hosts() rules
     ["topshare.in", "/", "form-tp-pattern"],
     ["djssmusic.com", "/", "form-tp-pattern"],
@@ -208,4 +211,17 @@ describe("host matching regression", () => {
       expect(id(host, path)).toBe(expected);
     });
   }
+});
+
+describe("trans.firm.in gate rule", () => {
+  // Regression: the rule matches every page on the host, including the image the
+  // POST renders back at the same URL. Waiting there hung a 30s MutationObserver
+  // and logged a bogus "Rule failed: TimeoutError" after every successful bypass.
+  test("clicks without waiting, so a cleared gate is a silent no-op", () => {
+    const rule = getAllRules().find((r) => r.id === "trans.firm.in");
+    expect(rule).toBeDefined();
+    const [action, ...rest] = rule!.actions;
+    expect(rest).toHaveLength(0);
+    expect(action).toMatchObject({ type: "click", wait: false });
+  });
 });

@@ -42,12 +42,14 @@ export const waitRedirect = (host: string, selector: string): Rule => ({
   actions: [{ type: "wait-element", selector, steps: [{ type: "redirect-from-href", selector }] }],
 });
 
-// Click a single element after a delay.
-export const clickAfter = (host: string, selector: string, delay: number): Rule => ({
+// Click a single element after a delay. Pass `wait: false` when the target is
+// server-rendered and the same host also serves pages without it — the click
+// then no-ops on those instead of holding a 30s MutationObserver and timing out.
+export const clickAfter = (host: string, selector: string, delay: number, wait = true): Rule => ({
   id: host,
   match: exact(host),
   runAt: "loaded",
-  actions: [{ type: "click", selector, delay }],
+  actions: [{ type: "click", selector, delay, wait }],
 });
 
 // Submit a named form, then click a follow-up button — the dominant safelink
