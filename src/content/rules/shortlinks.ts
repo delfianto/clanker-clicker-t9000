@@ -246,7 +246,12 @@ export const shortlinkRules: Rule[] = [
   // checks that the param is present — a bare form.submit() omits it (no
   // button was "activated"), so we click the input instead; simulateClick's
   // click event runs the native activation behavior and submits it properly.
-  clickAfter("trans.firm.in", "#continuetoimage input[name='imgContinue']", 0),
+  //
+  // `wait: false`: the POST lands back on the *same* URL rendering the image, so
+  // this rule matches the result page too (pathMatch can't tell them apart — only
+  // the method differs). The button is in the server HTML, so if it's absent at
+  // DOMContentLoaded the gate is already cleared and there's nothing to click.
+  clickAfter("trans.firm.in", "#continuetoimage input[name='imgContinue']", 0, false),
 
   // ─── Form submit patterns (cover many sites each) ─────────────────────────
 

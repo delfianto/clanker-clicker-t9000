@@ -16,7 +16,7 @@ export type RuleCtx = {
 };
 
 export type RuleAction =
-  | { type: "click"; selector: string; delay?: number }
+  | { type: "click"; selector: string; delay?: number; wait?: boolean }
   | { type: "submit"; selector: string; delay?: number }
   | { type: "wait-element"; selector: string; steps: RuleAction[] }
   | { type: "wait-captcha"; steps: RuleAction[] }

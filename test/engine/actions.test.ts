@@ -33,6 +33,44 @@ describe("click / submit", () => {
     expect(btn.hasAttribute("target")).toBe(false);
   });
 
+  test("click with wait:false no-ops when the selector is absent", async () => {
+    goto("https://site.test/");
+    // No element in the DOM at all. With the default (wait: true) this would
+    // hold a MutationObserver for 30s and reject with TimeoutError.
+    const started = Date.now();
+    await runActions([{ type: "click", selector: "#gone", wait: false }], sig());
+    expect(Date.now() - started).toBeLessThan(1000);
+  });
+
+  test("click with wait:false still clicks an element that is already present", async () => {
+    goto("https://site.test/");
+    const btn = document.createElement("button");
+    btn.id = "b";
+    let clicks = 0;
+    btn.addEventListener("click", () => clicks++);
+    document.body.appendChild(btn);
+
+    await runActions([{ type: "click", selector: "#b", wait: false }], sig());
+
+    expect(clicks).toBe(1);
+  });
+
+  test("click defaults to waiting for an element that appears later", async () => {
+    goto("https://site.test/");
+    const btn = document.createElement("button");
+    btn.id = "late";
+    let clicks = 0;
+    btn.addEventListener("click", () => clicks++);
+
+    // waitForElement installs its observer synchronously, so appending right
+    // after the call exercises the observer path rather than the qs fast-path.
+    const pending = runActions([{ type: "click", selector: "#late" }], sig());
+    document.body.appendChild(btn);
+    await pending;
+
+    expect(clicks).toBe(1);
+  });
+
   test("submit calls form.submit()", async () => {
     goto("https://site.test/");
     const submit = spyOn(HTMLFormElement.prototype, "submit").mockImplementation(() => {});

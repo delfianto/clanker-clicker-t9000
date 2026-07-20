@@ -24,7 +24,11 @@ async function executeAction(action: RuleAction, signal: AbortSignal): Promise<v
     case "click": {
       if (action.delay) await sleep(action.delay);
       if (signal.aborted) return;
-      const el = await waitForElement(action.selector, signal);
+      // `wait: false` — the target is server-rendered, so a miss means this page
+      // simply isn't the one the rule targets. No-op instead of polling for it.
+      const el =
+        action.wait === false ? qs(action.selector) : await waitForElement(action.selector, signal);
+      if (!el) break;
       simulateClick(el);
       break;
     }

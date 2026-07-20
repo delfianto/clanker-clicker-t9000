@@ -1,6 +1,7 @@
 import type { Rule } from "../../types/rules";
 import type { CCConfig } from "../../types/global";
 import { runActions } from "./actions";
+import { TimeoutError } from "./wait";
 
 export function matchRule(rules: Rule[], hostname: string, pathname: string): Rule | undefined {
   for (const rule of rules) {
@@ -33,6 +34,13 @@ export function runRule(rule: Rule, _config: CCConfig): void {
     if (isCloudflareChallenge()) return;
     runActions(rule.actions, controller.signal).catch((err) => {
       if (err instanceof DOMException && err.name === "AbortError") return;
+      // A selector that never appeared is an expected outcome, not a failure: a
+      // rule matches every page on its host, and only some of those carry the
+      // element. Keep it out of the warning channel so real breakage stands out.
+      if (err instanceof TimeoutError) {
+        console.debug(`[CC] Rule "${rule.id}" timed out:`, err.message);
+        return;
+      }
       console.warn(`[CC] Rule "${rule.id}" failed:`, err);
     });
   };
