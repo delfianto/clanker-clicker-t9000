@@ -27,6 +27,12 @@ export const downloadRules: Rule[] = [
   {
     id: "drive-google",
     match: "^drive\\.google\\.com$",
+    // Scoped to the file-view/download pages the action actually targets — an
+    // unscoped match installs the trust proxy (main.ts fires it on any match,
+    // ahead of the requiresFeature gate) on every Drive page, including the
+    // main file browser, which trips Drive's own tamper detection and shows
+    // a nonstop "Drive is out of date" reload banner.
+    pathMatch: "^/(file/d/|uc)",
     runAt: "loaded",
     requiresFeature: DL,
     actions: [

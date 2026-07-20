@@ -180,6 +180,8 @@ describe("host matching regression", () => {
     ["google.com", "/url", "google-url-redirect"],
     // downloads (matchRule ignores requiresFeature; gating is in main.ts)
     ["drive.google.com", "/file/d/x", "drive-google"],
+    ["drive.google.com", "/uc", "drive-google"],
+    ["drive.google.com", "/drive/my-drive", undefined],
     ["pixeldrain.com", "/u/abc", "pixeldrain"],
     ["mediafire.com", "/file/x", "mediafire"],
     ["turbobit.net", "/", "turbobit"],
