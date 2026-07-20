@@ -4,7 +4,7 @@ import { shortlinkRules } from "./shortlinks";
 import { wpsafeRules } from "./wpsafe";
 import { downloadRules } from "./downloads";
 import { googleRedirectRule } from "./custom/google-redirect";
-import { extToRule } from "./custom/ext-to";
+import { caribbeancomRule } from "./custom/caribbeancom";
 
 let _allRules: Rule[] | null = null;
 
@@ -17,7 +17,7 @@ export function getAllRules(): Rule[] {
       ...wpsafeRules,
       ...downloadRules,
       googleRedirectRule,
-      extToRule,
+      caribbeancomRule,
     ].sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
   }
   return _allRules;
