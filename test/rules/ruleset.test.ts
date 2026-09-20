@@ -137,12 +137,14 @@ describe("host matching regression", () => {
     ["linksly.co", "/", "linksly.co"],
     ["mohtawaa.com", "/", "mohtawaa.com"],
     ["imagebam.com", "/", "imagebam"],
+    ["minsite.lat", "/d1pdp5kftj1e", "minsite-lat"],
     ["trans.firm.in", "/img-6a5abd3527919.html", "trans.firm.in"],
     // Deliberately unfiltered by path: the POST result renders the same URL, and
     // the rule is expected to match it and no-op (see the wait:false test below).
     ["trans.firm.in", "/", "trans.firm.in"],
     // multi-host hosts() rules
-    ["topshare.in", "/", "form-tp-pattern"],
+    ["topshare.in", "/", "topshare-verify-gate"],
+    ["tempmaile.me", "/", "topshare-verify-gate"],
     ["djssmusic.com", "/", "form-tp-pattern"],
     ["themezon.net", "/", "form-tp-snp2-pattern"],
     ["otowp.com", "/", "form-tp-snp2-pattern"],
