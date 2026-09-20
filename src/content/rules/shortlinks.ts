@@ -192,6 +192,63 @@ export const shortlinkRules: Rule[] = [
       },
     ],
   },
+  // filespay.uk 301s straight to minsite.lat (a Laravel+Alpine "FileShare" gate
+  // template) before any content script runs, so only minsite.lat needs a rule.
+  // Its one form is gated by an Alpine `ready` flag that flips true 900ms after
+  // load — purely cosmetic front-end friction: the server accepts the POST
+  // immediately, checking only the `_token`/`t` hidden fields already present
+  // at load, so submitting straight away works.
+  //
+  // But the POST 302s off-host into a rotating ad/"traffic exchange" network
+  // (observed: topshare.in, tempmaile.me) whose chain — google.com/url cloaking
+  // wrapper → sponsored post → #btn-download verify POSTs — hands you back to
+  // the origin gate, which re-renders `data-dl-step="1"` with a fresh `t` token
+  // every single time. The step counter never advances (verified 2026-09-20
+  // across several human-speed cycles: no release state is ever served), so
+  // every return render is byte-for-byte a fresh arrival. The old declarative
+  // `submit` re-fired on each one: POST → ad chain → return → POST … ~2-3
+  // minsite POSTs per ~10s cycle, until the server answered 429.
+  //
+  // So submit at most once per link per tab: skip renders referred by the
+  // chain hosts outright, and record the attempt in sessionStorage (keyed by
+  // the link's path) so the `?t=<token>` re-render dance and plain reloads
+  // can't re-fire it either. A deliberate retry still works — open the link
+  // in a new tab (fresh tab, fresh flag) — while the chain walks exactly once
+  // and rests on the gate instead of hammering toward the rate limit.
+  {
+    id: "minsite-lat",
+    match: exact("minsite.lat"),
+    runAt: "loaded",
+    actions: [
+      {
+        type: "run",
+        run: (ctx) => {
+          const flag = `__cc_submitted${location.pathname}`;
+          let attempted = false;
+          try {
+            attempted = sessionStorage.getItem(flag) !== null;
+          } catch {
+            // storage unavailable — the referrer guard below still breaks the loop
+          }
+          if (attempted) return;
+          let refHost = "";
+          try {
+            refHost = new URL(document.referrer).hostname.replace(/^www\./, "");
+          } catch {
+            /* empty or invalid referrer — a fresh arrival */
+          }
+          if (/^(topshare\.in|tempmaile\.me)$/.test(refHost)) return;
+          try {
+            sessionStorage.setItem(flag, "1");
+          } catch {
+            /* ignore — worst case the referrer guard alone limits us */
+          }
+          const form = ctx.qs<HTMLFormElement>(".dl-card form");
+          if (form instanceof HTMLFormElement) form.submit();
+        },
+      },
+    ],
+  },
   {
     id: "multiup-io",
     match: exact("multiup.io"),
@@ -265,11 +322,60 @@ export const shortlinkRules: Rule[] = [
       "sayphotobooth.com",
       "sharedp.com",
       "superheromaniac.com",
-      "topshare.in",
       "visastepguide.com",
     ),
     "tp",
   ),
+  // topshare.in and tempmaile.me are a rotating pool of "traffic exchange"
+  // hosts reached via minsite.lat's ad-gate chain — they serve two different
+  // gate shapes depending on referral path, so topshare.in is handled here
+  // instead of folded into form-tp-pattern above:
+  //   - form[name='tp'] + #btn6 (the shared safelink-style gate)
+  //   - form#parasdev + #btn-download[name='verify'] ("Create Link", reached
+  //     after clearing the ad-content-locker chain)
+  // The verify button is clicked rather than submitted via form.submit() —
+  // same reasoning as trans.firm.in: form.submit() omits the activating
+  // button's name/value pair, and the server may check for `verify`.
+  //
+  // skipTimerBoost: unlike minsite.lat's cosmetic 900ms Alpine delay, this
+  // leg's countdown almost certainly gates a real ad-view / elapsed-time check
+  // server-side — crushing it with timerBoost raced past that check every
+  // time, which is why the chain kept bouncing back to minsite.lat step 1
+  // (and, hammered that fast, tripped its rate limit: 429). Poll for
+  // #btn-download to actually clear its `disabled` state — the mirror of
+  // minsite.lat's Alpine `:disabled="! ready"` gate — instead of clicking the
+  // instant it exists in the DOM, so this only ever runs as fast as the real
+  // countdown allows.
+  {
+    id: "topshare-verify-gate",
+    match: hosts("topshare.in", "tempmaile.me"),
+    runAt: "loaded",
+    skipTimerBoost: true,
+    actions: [
+      {
+        type: "run",
+        run: async (ctx) => {
+          const tpForm = ctx.qs<HTMLFormElement>("form[name='tp']");
+          if (tpForm) {
+            tpForm.submit();
+            return;
+          }
+          const deadline = Date.now() + 30_000;
+          while (Date.now() < deadline && !ctx.signal.aborted) {
+            const btn = ctx.qs<HTMLButtonElement>("#btn-download");
+            if (btn && !btn.disabled) {
+              await ctx.click("#btn-download");
+              return;
+            }
+            await new Promise((resolve) => {
+              setTimeout(resolve, 300);
+            });
+          }
+        },
+      },
+      { type: "wait-element", selector: "#btn6", steps: [{ type: "click", selector: "#btn6" }] },
+    ],
+  },
   {
     // Sites using WP SafeLink's tp form + #tp-snp2 button.
     // Two-phase pattern on some hosts (e.g. themezon.net):
