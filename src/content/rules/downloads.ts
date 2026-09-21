@@ -1,6 +1,7 @@
 import type { Rule } from "../../types/rules";
 
-// All download rules are gated behind autoDL setting.
+// All download rules are gated behind autoDL. (Exception: the frdl feature-gate
+// below — it automates no part of the download flow, so there is nothing to gate.)
 const DL: Rule["requiresFeature"] = "autoDL";
 
 export const downloadRules: Rule[] = [
@@ -47,6 +48,57 @@ export const downloadRules: Rule[] = [
           } else if (location.href.includes("uc?id")) {
             qs<HTMLFormElement>("#download-form")?.submit();
           }
+        },
+      },
+    ],
+  },
+  {
+    // FreeDlink file host — not a shortlink. The free tier's gate is a client-side
+    // 60s countdown: `freeDownload()` reveals `#countdown` and chains
+    // `setTimeout(tick, 1000)`, and each `tick()` reads the CURRENT text of
+    // `.seconds` and writes back one less. That DOM read is the bypass.
+    //
+    // skipTimerBoost is load-bearing here: the countdown and the page's hCaptcha run
+    // concurrently in the same top window, and the boost's patched `window.setTimeout`
+    // makes hCaptcha's coordination timers fire ~20x early — a solved puzzle then
+    // never completes its validation handshake (no green tick). So instead of
+    // accelerating the timers, fast-forward the counter itself: when the countdown
+    // becomes visible, write "1" into `.seconds`. The page's own next native tick
+    // reads it, hits `remaining <= 0`, and reveals "Start Download NOW" — within
+    // ~1s, with zero global patching.
+    //
+    // Mirror TLDs rotate constantly (frdl.hk/.ru/.is/.to/.io/… — each gets suspended
+    // and replaced), so match the `frdl.` prefix with exactly ONE label after it:
+    // covers every current and future TLD while excluding unrelated multi-label
+    // hosts that merely start with "frdl" (frdl.org.pl is a Polish NGO). freedl.ink
+    // is the brand/CDN apex and serves the same script.
+    id: "frdl",
+    match: "^(frdl\\.[a-z0-9-]{2,}|freedl\\.ink)$",
+    runAt: "loaded",
+    skipTimerBoost: true,
+    actions: [
+      {
+        type: "run",
+        run: (ctx) => {
+          const fastForward = (): void => {
+            const countdown = ctx.qs<HTMLElement>("#countdown");
+            // The counter is only ever revealed by jQuery's .show(), which flips
+            // the display — that flip is the trigger; nothing subtler runs here.
+            if (!countdown || getComputedStyle(countdown).display === "none") return;
+            const seconds = countdown.querySelector<HTMLElement>(".seconds");
+            // Deliberately not one-shot: re-checking on every mutation keeps a
+            // re-shown counter (repeat attempt) fast-forwarded too, and stops
+            // rewriting as soon as the text reads "1" (the success tick).
+            if (seconds && seconds.textContent !== "1") seconds.textContent = "1";
+          };
+          const observer = new MutationObserver(fastForward);
+          ctx.signal.addEventListener("abort", () => observer.disconnect(), { once: true });
+          observer.observe(document.documentElement, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ["style"],
+          });
         },
       },
     ],

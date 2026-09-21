@@ -188,6 +188,17 @@ describe("host matching regression", () => {
     ["mediafire.com", "/file/x", "mediafire"],
     ["turbobit.net", "/", "turbobit"],
     ["usersdrive.com", "/i79xonlemlbv.html", "usersdrive"],
+    // frdl prefix family — rotating mirror TLDs + the freedl.ink apex
+    ["frdl.hk", "/2ujpwayvi8pz/ALIKA.zip", "frdl"],
+    ["frdl.ru", "/", "frdl"],
+    ["frdl.to", "/", "frdl"],
+    ["frdl.link", "/", "frdl"],
+    ["freedl.ink", "/", "frdl"],
+    ["www.freedl.ink", "/", "frdl"],
+    // single-label TLDs only: frdl.org.pl is an unrelated Polish NGO, and the
+    // anchoring rule (see the ez4mods cases below) applies to the prefix too
+    ["frdl.org.pl", "/", undefined],
+    ["frdl.hk.evil.test", "/", undefined],
     // pathMatch gating
     ["facebook.com", "/linkshim", "facebook-instagram-u"],
     ["facebook.com", "/", undefined],
@@ -215,6 +226,21 @@ describe("host matching regression", () => {
       expect(id(host, path)).toBe(expected);
     });
   }
+});
+
+describe("frdl feature-gate rule", () => {
+  // The timer boost itself is banned on this host: the countdown and the page's
+  // hCaptcha share the top window, and patched timers make solved puzzles never
+  // validate (no green tick). The bypass is the rule's own counter fast-forward.
+  // Lock in the trio: no autoDL gate, boost explicitly suppressed, single run action.
+  test("fast-forwards the counter with the boost suppressed", () => {
+    const rule = getAllRules().find((r) => r.id === "frdl");
+    expect(rule).toBeDefined();
+    expect(rule!.requiresFeature).toBeUndefined();
+    expect(rule!.skipTimerBoost).toBe(true);
+    expect(rule!.actions).toHaveLength(1);
+    expect(rule!.actions[0]?.type).toBe("run");
+  });
 });
 
 describe("trans.firm.in gate rule", () => {
