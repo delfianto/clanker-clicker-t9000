@@ -28,6 +28,69 @@ export function imagebamCookieNames(doc: Document = document): string[] {
   return found.size > 0 ? [...found] : ["sfw_inter", "nsfw_inter"];
 }
 
+// Real downloads are always served by vikuy.click itself (serve_video.php,
+// token-gated); the decoy is a cross-host affiliate shortlink. Allowlisting the
+// site's own domain (plus subdomains) survives the site renaming either the ad
+// partner or the file endpoint.
+function isVikuyRealDownload(href: string, siteHost: string): boolean {
+  if (!href) return false;
+  try {
+    const u = new URL(href, `https://${siteHost}/`);
+    return (
+      /^https?:$/.test(u.protocol) &&
+      (u.hostname === siteHost || u.hostname.endsWith(`.${siteHost}`))
+    );
+  } catch {
+    return false;
+  }
+}
+
+// Remove every decoy "Server Download" button (off-domain href) from the grid.
+// Exported for tests, like imagebamCookieNames below.
+export function sweepVikuyDecoys(doc: Document, siteHost: string): number {
+  let removed = 0;
+  for (const a of doc.querySelectorAll<HTMLAnchorElement>("a.server[data-kind='download']")) {
+    if (!isVikuyRealDownload(a.getAttribute("href") ?? "", siteHost)) {
+      a.remove();
+      removed++;
+    }
+  }
+  return removed;
+}
+
+// Claim clicks on real download buttons before the page's own handler sees
+// them: a capture-phase listener at the document root runs before the
+// target-phase listener the inline script bound at parse time, so
+// stopPropagation keeps the page's download flow from running at all.
+// Exported for tests. Returns an unbind function.
+export function installVikuyDownloadInterceptor(
+  doc: Document,
+  siteHost: string,
+  go: (url: string) => void,
+): () => void {
+  const intercept = (event: Event): void => {
+    if (!(event instanceof MouseEvent)) return;
+    // Modified clicks (ctrl/cmd = new tab, etc.) aren't ours to hijack.
+    if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+      return;
+    }
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    const anchor = target.closest("a.server[data-kind='download']");
+    if (!(anchor instanceof HTMLAnchorElement)) return;
+    if (!isVikuyRealDownload(anchor.getAttribute("href") ?? "", siteHost)) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    const waitBox = doc.getElementById("waitBox");
+    if (waitBox) waitBox.textContent = "Starting download…";
+    // The DOM .href property resolves to absolute; navigateTo only assigns
+    // http(s), and an attachment response downloads without unloading the page.
+    go(anchor.href);
+  };
+  doc.addEventListener("click", intercept, true);
+  return () => doc.removeEventListener("click", intercept, true);
+}
+
 export const shortlinkRules: Rule[] = [
   // ─── URL param extraction (run at document_start, no DOM needed) ───────────
 
@@ -309,6 +372,74 @@ export const shortlinkRules: Rule[] = [
   // the method differs). The button is in the server HTML, so if it's absent at
   // DOMContentLoaded the gate is already cleared and there's nothing to click.
   clickAfter("trans.firm.in", "#continuetoimage input[name='imgContinue']", 0, false),
+
+  // vikuy.click's Download Center does two things that need one rule:
+  //
+  // 1. It's a pure client-side gate: each "Server Download" button's click
+  //    handler preventDefault()s, then counts a closure-private `remaining`
+  //    from 5 down via setInterval(..., 1000) before starting the download
+  //    (primary server: hidden iframe to serve_video.php; alternative:
+  //    top-window navigation). The counter is never read back from the DOM
+  //    (the #counter node is write-only), so — unlike frdl — it cannot be
+  //    fast-forwarded; the only lever is patching the timers themselves. That's
+  //    exactly what the timer-boost feature does (1000ms interval sits at the
+  //    default threshold → 50ms, so 5s collapses to ~0.25s), but main.ts only
+  //    installs features on hosts a rule matches — this rule is that unclamp.
+  //    Safe to boost: the serve_video token (base64 of uid|expiry|ip|action|
+  //    hash) is expiry-bound, with no server-side elapsed-time check to race.
+  //
+  // 2. It shuffles the two buttons per request: one is the real file, the
+  //    other an affiliate ad shortlink (gotoserba.com/click/* — an Indonesian
+  //    "offer picker" whose landing page auto-submits a form straight into
+  //    Shopee). Both render identically (class "server real", tag "Download
+  //    File", a page notice claiming both deliver the file) and only the DOM
+  //    order rotates — the slot you clicked last time is a coin flip this time.
+  //    So sweep the grid: every button not pointing at the site's own domain
+  //    is removed, leaving only real ones for the user (and the boosted
+  //    countdown) to ride. The countdown handler captures its link list at
+  //    parse time, so a removed decoy is inert — its listener dies with the
+  //    node. The page can also inject buttons after load (its own script
+  //    references a conditionally-added sponsored slot), hence the observer.
+  //
+  // 3. The page's own download path dies under timer boost: startDownload()
+  //    starts the file via a hidden iframe, then schedules its cleanup with
+  //    setTimeout(2500) — which the boost crushes to 50ms, ripping the iframe
+  //    out before the request completes and canceling the download every
+  //    time ("clicking does nothing"). No threshold can separate the two:
+  //    any threshold low enough to boost the 1000ms countdown interval
+  //    necessarily boosts the 2500ms cleanup too. So the interceptor claims
+  //    clicks on real buttons and navigates the top window straight to the
+  //    token URL — attachment disposition means the browser downloads the
+  //    file and the page never unloads. No iframe, nothing to cancel.
+  {
+    id: "vikuy-download",
+    match: exact("vikuy.click"),
+    pathMatch: "^/download\\.php$",
+    runAt: "loaded",
+    actions: [
+      {
+        type: "run",
+        run: (ctx) => {
+          sweepVikuyDecoys(document, location.hostname);
+          const observer = new MutationObserver(() => {
+            sweepVikuyDecoys(document, location.hostname);
+          });
+          observer.observe(document.body, { childList: true, subtree: true });
+          const unbind = installVikuyDownloadInterceptor(document, location.hostname, (url) =>
+            ctx.navigateTo(url),
+          );
+          ctx.signal.addEventListener(
+            "abort",
+            () => {
+              observer.disconnect();
+              unbind();
+            },
+            { once: true },
+          );
+        },
+      },
+    ],
+  },
 
   // ─── Form submit patterns (cover many sites each) ─────────────────────────
 
