@@ -205,6 +205,9 @@ describe("host matching regression", () => {
     ["google.com", "/search", undefined],
     ["comohoy.com", "/", undefined],
     ["comohoy.com", "/view/out.html", "comohoy-url-b64"],
+    // vikuy feature gate (timer boost unclamp) — scoped to the download page
+    ["vikuy.click", "/download.php", "vikuy-download"],
+    ["vikuy.click", "/watch", undefined],
     // anchoring tightening — these must NOT match (were substring matches before)
     ["notez4mods.com", "/", undefined],
     ["ez4mods.com.evil.test", "/", undefined],
@@ -253,5 +256,20 @@ describe("trans.firm.in gate rule", () => {
     const [action, ...rest] = rule!.actions;
     expect(rest).toHaveLength(0);
     expect(action).toMatchObject({ type: "click", wait: false });
+  });
+});
+
+describe("vikuy feature-gate rule", () => {
+  // Two jobs in one rule: (1) stay ungated so main.ts installs the timer boost
+  // on the download.php countdown page — the boost is the actual bypass there —
+  // and (2) sweep the decoy affiliate buttons so only the real same-origin
+  // download link survives (see test/rules/vikuy.test.ts for the sweep itself).
+  test("stays ungated and boost-friendly", () => {
+    const rule = getAllRules().find((r) => r.id === "vikuy-download");
+    expect(rule).toBeDefined();
+    expect(rule!.requiresFeature).toBeUndefined();
+    expect(rule!.skipTimerBoost).toBeUndefined();
+    expect(rule!.actions).toHaveLength(1);
+    expect(rule!.actions[0]?.type).toBe("run");
   });
 });
