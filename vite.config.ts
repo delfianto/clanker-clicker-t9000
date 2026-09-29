@@ -94,7 +94,7 @@ export default defineConfig({
     outDir: `build/${browser}`,
     emptyOutDir: true,
     sourcemap: process.env["NODE_ENV"] !== "production",
-    minify: process.env["NODE_ENV"] === "production" ? "esbuild" : false,
+    minify: process.env["NODE_ENV"] === "production",
   },
 
   lint: {
