@@ -20,11 +20,11 @@
     "webextension-polyfill": "^0.12.0"
   },
   "devDependencies": {
-    "@happy-dom/global-registrator": "^20.14.5",
-    "@types/chrome": "^0.3.4",
+    "@happy-dom/global-registrator": "^21.0.4",
+    "@types/chrome": "^0.3.7",
     "@types/webextension-polyfill": "^0.12.6",
-    "happy-dom": "^20.14.5",
-    "playwright": "^1.63.0",
+    "happy-dom": "^21.0.4",
+    "playwright": "^1.65.0",
     "typescript": "^7.0.2",
     "vite": "npm:@voidzero-dev/vite-plus-core@1.5.0",
     "vite-plugin-web-extension": "^4.5.1",
